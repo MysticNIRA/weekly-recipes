@@ -2,6 +2,13 @@
 <html lang="en"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Weekly Recipes</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#faf7f2">
+<meta name="apple-mobile-web-app-title" content="Recipes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <style>
 :root{--bg:#faf7f2;--card:#fff;--accent:#c0603a;--accent-ink:#fff;--line:#e6ddd2;--text:#3a332c;--muted:#7a7064;--ok:#4f804f;--soft:#f3ede4;--note:#fbf0e4;
   box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
@@ -248,6 +255,8 @@ details.ingr li{margin:3px 0}
       <section class="settings-section" aria-labelledby="helpHead">
         <h4 id="helpHead">Help</h4>
         <button class="btn secondary" id="replayTourBtn">Show the welcome tour again</button>
+        <h5>Install on your phone</h5>
+        <div id="installHelp"></div>
       </section>
     </div>
     <div id="weekView">
@@ -281,6 +290,7 @@ details.ingr li{margin:3px 0}
 <script src="shopping-lists.js"></script>
 <script src="tour.js"></script>
 <script src="history.js"></script>
+<script src="install.js"></script>
 <script>
 /* Common ingredient swaps, grouped by food category. `match` finds the ingredient lines a swap
    applies to. Each swap has one or more replacement `options`; `save` is a rough per-serving
@@ -1748,6 +1758,7 @@ initDay(TODAY);
 updateWakeLock();
 $("replayTourBtn").onclick=()=>{$("settingsPanel").hidden=true;$("settingsBtn").setAttribute("aria-expanded","false");startTour()};
 maybeStartTour();
+setupInstall();
 // Some browsers only grant the wake lock after the user interacts with the page.
 document.addEventListener("click",updateWakeLock,{once:true});
 </script>
