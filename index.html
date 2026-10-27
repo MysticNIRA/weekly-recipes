@@ -41,6 +41,8 @@ h1{font-size:20px;margin:0}
 .tour-box .tour-count{font-size:12px;color:var(--muted);margin:0 0 4px}
 .tour-box .controls{align-items:center}
 .tour-target{position:relative;z-index:51;outline:3px solid var(--accent);outline-offset:3px;border-radius:6px;background:var(--card)}
+.rate-box{border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:0 0 14px}
+.rate-q{font-weight:600;margin:0 0 8px}
 .reminder{display:flex;align-items:flex-start;gap:10px;background:var(--note);border-left:4px solid var(--accent);border-radius:6px;padding:10px 12px;margin:0 0 10px;font-size:14px}
 .reminder p{margin:0;flex:1}
 .reminder .controls{flex-shrink:0}
@@ -278,6 +280,7 @@ details.ingr li{margin:3px 0}
 <script src="my-recipes.js"></script>
 <script src="shopping-lists.js"></script>
 <script src="tour.js"></script>
+<script src="history.js"></script>
 <script>
 /* Common ingredient swaps, grouped by food category. `match` finds the ingredient lines a swap
    applies to. Each swap has one or more replacement `options`; `save` is a rough per-serving
@@ -1228,7 +1231,7 @@ function renderRecipe(){
   const head=`
     <div class="rhead">
       <div><h2 class="recipe-title">${r.title}</h2>
-      <p class="recipe-sub">${[DAY_NAMES[dayIdx],r.cuisine,mealTypeText(r),timeText(r),`serves ${r.serves}`,r.steps.length?`${r.steps.length} steps`:"no steps",costText(r),caloriesText(r)].filter(Boolean).join(" · ")}</p>
+      <p class="recipe-sub">${[DAY_NAMES[dayIdx],r.cuisine,mealTypeText(r),timeText(r),`serves ${r.serves}`,r.steps.length?`${r.steps.length} steps`:"no steps",costText(r),caloriesText(r),lastCookedText(r.id)].filter(Boolean).join(" · ")}</p>
       ${dietLabelsHtml(r)?`<div class="labels">${dietLabelsHtml(r)}</div>`:""}</div>
       <div class="controls">${favButtonHtml(r)}${r.mine?`<button class="btn secondary" data-edit="${r.id}">Edit recipe</button>`:""}<button class="btn secondary" id="swapBtn">Pick a different recipe</button></div>
     </div>
@@ -1267,8 +1270,9 @@ function renderRecipe(){
   }else if(stepIdx>=r.steps.length){
     card.innerHTML=head+(r.steps.length?`<p class="done-label">All steps done.</p><p class="done-note">${wrapUpText(r)}</p>`
       :`<p class="done-label">This recipe is just an ingredient list.</p><p class="done-note">Cook it your way. When you're done, put ingredients away and set your dishes aside to wash. Enjoy your meal!</p>`)
-      +`<button class="btn" id="againBtn">Start over</button>`;
+      +rateHtml(r)+`<button class="btn" id="againBtn">Start over</button>`;
     $("againBtn").onclick=()=>initDay(dayIdx);
+    bindRate(r,()=>{renderRecipe();renderDays()});
   }else{
     const st=r.steps[stepIdx];
     // Hands-on steps (chopping, building, quick stovetop work) have no countdown, only an estimate.
@@ -1424,7 +1428,7 @@ function renderCatalog(){
       <label>Cuisine <select id="cuisineSel"><option value="">All cuisines</option>${CUISINES.map(c=>`<option>${c}</option>`).join("")}</select></label>
       <label>Cook on <select id="daySel">${DAY_NAMES.map((d,i)=>`<option value="${i}">${d}${i===TODAY?" (today)":""}</option>`).join("")}</select></label>
     </div>
-    ${chipGroupHtml("show","Which recipes",[["","All recipes"],["fav","♥ Favorites only"],["byo","Build your own"],["mine","My recipes"]])}
+    ${chipGroupHtml("show","Which recipes",[["","All recipes"],["fav","♥ Favorites only"],["byo","Build your own"],["mine","My recipes"],["liked","👍 Make again"],["new","Not tried yet"]])}
     ${chipGroupHtml("meal","Meal",[["","Any meal"],...Object.entries(MEALS)])}
     ${chipGroupHtml("diet","Diet",[["","Any diet"],["vegetarian","Vegetarian"],["vegan","Vegan"],["halal","Halal-friendly"],["glutenfree","Gluten-free"]])}
     <div id="dietAdaptRow" hidden>${chipGroupHtml("dietAdapt","Recipes that can be changed to fit",[["","Already fits"],["yes","Also show ones that can be changed to fit"]])}</div>
@@ -1481,6 +1485,8 @@ function renderList(){
     if(cat.show==="fav"&&!favorites.has(r.id))return false;
     if(cat.show==="byo"&&!r.byo)return false;
     if(cat.show==="mine"&&!r.mine)return false;
+    if(cat.show==="liked"&&historyFor(cookHistory,r.id)?.rating!=="up")return false;
+    if(cat.show==="new"&&historyFor(cookHistory,r.id))return false;
     if(cat.meal&&!r.meal.includes(cat.meal))return false;
     if(cat.type&&!r.tags.includes(cat.type))return false;
     return textHasAll(SEARCH_TEXT[r.id],words);
@@ -1509,6 +1515,7 @@ function renderList(){
   if(!withMissing.length){
     const msg=cat.show==="fav"&&!favorites.size
       ?"No favorites yet. Tap ♡ Favorite on any recipe to save it here."
+      :cat.show==="liked"&&!cookHistory.some(e=>e.rating==="up")?"Nothing marked 👍 yet. When you finish a recipe, tap 👍 Make again on the last screen and it shows up here."
       :cat.show==="mine"&&!RECIPES.some(r=>r.mine)?"No recipes of your own yet. Make one in the My recipes tab, or press Copy and edit on any recipe here."
       :"No recipes match. Try a different word, or loosen the meal, dish type, diet, cuisine, cost, calorie, time, or prep filters.";
     L.innerHTML=`<div class="empty">${msg}</div>`;return;
@@ -1524,7 +1531,7 @@ function renderList(){
       <div class="item-top"><h3>${r.title}</h3><span class="badges">${timeText(r)?`<span class="time">${timeText(r)}</span>`:""}${cost===null?"":`<span class="cost">${cost<r.cost?`<s class="was">${r.cost.toFixed(2)}</s> `:""}${fmtCost(cost)}</span>`}</span></div>
       <p class="meta">${[r.cuisine,mealTypeText(r),`Serves ${r.serves}`,r.steps.length?`${r.steps.length} steps`:"no steps",caloriesText(r),onDays.length?`on your plan for ${onDays.join(", ")}`:""].filter(Boolean).join(" · ")}</p>
       ${r.desc?`<p class="dish-desc">${r.desc}</p>`:""}
-      <div class="labels">${dietLabelsHtml(r)}${cat.diet&&!r.diet.includes(cat.diet)?`<span class="sticker">Can be made ${DIET_NAMES[cat.diet]}</span>`:""}${sticker}</div>
+      <div class="labels">${dietLabelsHtml(r)}${cat.diet&&!r.diet.includes(cat.diet)?`<span class="sticker">Can be made ${DIET_NAMES[cat.diet]}</span>`:""}${sticker}${historyStickerHtml(r.id)}</div>
       ${pantryNote}
       <details><summary>Ingredients and steps</summary>
         <h4>Ingredients</h4><ul>${ingredientsHtml(r,false)}</ul>

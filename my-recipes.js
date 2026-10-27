@@ -125,6 +125,7 @@ function renderMyList(){
     ${drafts.length?`<h3 class="my-head">Unfinished drafts</h3><p class="recipe-sub">Saved for later. Press Continue to pick up where you left off.</p>${byNewest(drafts).map(myItemHtml).join("")}`:""}
     ${saved.length?`<h3 class="my-head">Saved recipes</h3><p class="recipe-sub">These are in All recipes too, where you can put them on any day.</p>${byNewest(saved).map(myItemHtml).join("")}`:""}
     ${myEntries.length?"":`<div class="empty">No recipes of your own yet. Press <strong>New recipe</strong> to write one, or press <strong>Copy and edit</strong> on any recipe in All recipes to start from it.</div>`}
+    ${historyListHtml()}
   </div>`;
   mineNotice="";
   $("newMyBtn").onclick=()=>startMyRecipe(blankMyRecipe());
@@ -132,6 +133,7 @@ function renderMyList(){
   $("importMyFile").onchange=e=>importMyRecipes(e.target.files[0]);
   if(myEntries.length)$("exportMyBtn").onclick=()=>exportMyRecipes(myEntries,"my-recipes.json");
   bindEditButtons(el);
+  bindHistoryList(el,renderMine);
   el.querySelectorAll("button[data-my-edit]").forEach(b=>b.onclick=()=>editRecipe(b.dataset.myEdit));
   el.querySelectorAll("button[data-my-plan]").forEach(b=>b.onclick=()=>{
     Object.assign(cat,{q:"",show:"mine",diet:"",meal:"",type:"",cuisine:"",max:0,maxCost:0,maxCal:0,prep:"",pantry:""});
