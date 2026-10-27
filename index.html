@@ -32,6 +32,18 @@ h1{font-size:20px;margin:0}
 .recipe-title{font-size:19px;margin:0 0 2px}
 .recipe-sub{color:var(--muted);font-size:13px;margin:0 0 14px}
 .swapnote{background:var(--note);border-radius:6px;padding:8px 10px;font-size:13px;margin:0 0 14px}
+.tour{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;padding:16px}
+/* Hidden always wins: a display rule (like the tour's display:flex) would otherwise keep it on screen. */
+[hidden]{display:none!important}
+.tour-box{background:var(--card);color:var(--text);border-radius:12px;padding:18px 20px;max-width:440px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,.25);margin-bottom:max(16px,env(safe-area-inset-bottom))}
+.tour-box h2{margin:0 0 8px;font-size:18px}
+.tour-box p{margin:0 0 14px;font-size:15px}
+.tour-box .tour-count{font-size:12px;color:var(--muted);margin:0 0 4px}
+.tour-box .controls{align-items:center}
+.tour-target{position:relative;z-index:51;outline:3px solid var(--accent);outline-offset:3px;border-radius:6px;background:var(--card)}
+.reminder{display:flex;align-items:flex-start;gap:10px;background:var(--note);border-left:4px solid var(--accent);border-radius:6px;padding:10px 12px;margin:0 0 10px;font-size:14px}
+.reminder p{margin:0;flex:1}
+.reminder .controls{flex-shrink:0}
 .link{background:none;border:none;padding:0;color:var(--accent);text-decoration:underline;cursor:pointer;font-size:13px}
 details.ingr{border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin-bottom:14px}
 details summary{cursor:pointer;font-weight:600;font-size:14px}
@@ -231,8 +243,13 @@ details.ingr li{margin:3px 0}
         <div class="settings-row"><label for="speechRateSel">Reading speed</label> <select id="speechRateSel"></select> <button class="btn secondary" id="testVoiceBtn">🔊 Test voice</button></div>
         <p class="settings-note" id="speechNote" style="margin-left:0">Every step also has a 🔊 Read step button, and the ingredient list has one too.</p>
       </section>
+      <section class="settings-section" aria-labelledby="helpHead">
+        <h4 id="helpHead">Help</h4>
+        <button class="btn secondary" id="replayTourBtn">Show the welcome tour again</button>
+      </section>
     </div>
     <div id="weekView">
+      <div id="reminders"></div>
       <div class="days" id="days"></div>
       <div class="card" id="recipeCard"></div>
     </div>
@@ -240,6 +257,7 @@ details.ingr li{margin:3px 0}
     <div id="shopView" hidden></div>
     <div id="mineView" hidden></div>
   </div>
+  <div class="tour" id="tour" hidden><div class="tour-box" id="tourBox" role="dialog" aria-modal="true" aria-labelledby="tourTitle"></div></div>
   <aside class="side" id="side">
     <h3>Checklist</h3>
     <div id="checklist"></div>
@@ -259,6 +277,7 @@ details.ingr li{margin:3px 0}
 <script src="my-recipes-data.js"></script>
 <script src="my-recipes.js"></script>
 <script src="shopping-lists.js"></script>
+<script src="tour.js"></script>
 <script>
 /* Common ingredient swaps, grouped by food category. `match` finds the ingredient lines a swap
    applies to. Each swap has one or more replacement `options`; `save` is a rough per-serving
@@ -659,6 +678,47 @@ function planAheadHtml(r){
   const prep=r.steps.filter(s=>s.prep);
   if(!prep.length)return "";
   return `<p class="swapnote"><strong>Plan ahead:</strong> ${prep.map(s=>`${s.name.replace(/ \(the night before\)$/,"")} (${stepPrepText(s)})`).join(", ")} before you cook. This is counted as prep, not cooking time.</p>`;
+}
+/* ---------- plan-ahead reminders ---------- */
+// Prep is easy to forget until it's too late, so the week view says what to start today:
+// overnight soaks the evening before, long marinades (2 hr or more) a day ahead, and shorter prep
+// on the day itself. plan is the 7 recipes as they'll be cooked; today is 0 (Monday) to 6.
+const LONG_PREP=120;
+const stepPhrase=s=>{const n=s.name.replace(/ \(the night before\)$/,"");return n[0].toLowerCase()+n.slice(1)};
+function planAheadReminders(plan,today){
+  const tomorrow=(today+1)%7,out=[];
+  const t=plan[tomorrow],tPrep=t.steps.filter(s=>s.prep);
+  for(const s of tPrep.filter(s=>s.overnight))
+    out.push({key:`${t.id}:night:${s.name}`,day:tomorrow,icon:"🌙",text:`<strong>Tonight:</strong> ${stepPhrase(s)} for tomorrow's ${t.title}.`});
+  const tLong=tPrep.filter(s=>!s.overnight&&s.min>=LONG_PREP);
+  if(tLong.length)out.push({key:`${t.id}:early`,day:tomorrow,icon:"⏰",
+    text:`<strong>Tomorrow:</strong> ${t.title} needs ${fmtMin(tLong.reduce((a,s)=>a+s.min,0))} to ${tLong.map(stepPhrase).join(" and ")}. Start in the morning, or tonight in the fridge.`});
+  const r=plan[today],prep=r.steps.filter(s=>s.prep);
+  if(prep.some(s=>s.overnight))out.push({key:`${r.id}:missed`,day:today,icon:"⚠",offerSwap:true,
+    text:`<strong>Today:</strong> ${r.title} needed you to ${prep.filter(s=>s.overnight).map(stepPhrase).join(" and ")} last night. Didn't get to it? Pick a different recipe for today.`});
+  const short=prep.filter(s=>!s.overnight);
+  if(short.length){
+    const mins=short.reduce((a,s)=>a+s.min,0);
+    out.push({key:`${r.id}:today`,day:today,icon:"⏰",text:`<strong>Today:</strong> ${r.title} needs ${fmtMin(mins)} of prep (${short.map(stepPhrase).join(", ")}) before cooking, so start about ${fmtMin(mins)} earlier than usual.`});
+  }
+  return out;
+}
+// "Got it" hides a reminder for the rest of the day.
+const REMINDERS_KEY="weekly-recipes-reminders-seen";
+const todayStamp=()=>new Date().toDateString();
+let remindersSeen=[];
+try{const s=JSON.parse(localStorage.getItem(REMINDERS_KEY)||"null");if(s?.date===todayStamp()&&Array.isArray(s.keys))remindersSeen=s.keys.filter(k=>typeof k==="string")}catch(e){}
+function renderReminders(){
+  const list=planAheadReminders(planArr().map(id=>withAddons(byId[id])),TODAY).filter(x=>!remindersSeen.includes(x.key));
+  const el=$("reminders");
+  el.innerHTML=list.map(x=>`<div class="reminder" role="status"><span aria-hidden="true">${x.icon}</span><p>${x.text}</p>
+    <div class="controls">${x.offerSwap?`<button class="btn secondary" data-remind-swap="${x.day}">Pick a different recipe</button>`:""}<button class="btn secondary" data-remind-seen="${x.key}">Got it</button></div></div>`).join("");
+  el.querySelectorAll("button[data-remind-seen]").forEach(b=>b.onclick=()=>{
+    remindersSeen.push(b.dataset.remindSeen);
+    try{localStorage.setItem(REMINDERS_KEY,JSON.stringify({date:todayStamp(),keys:remindersSeen}))}catch(e){}
+    renderReminders();
+  });
+  el.querySelectorAll("button[data-remind-swap]").forEach(b=>b.onclick=()=>{dayIdx=+b.dataset.remindSwap;setView("cat");window.scrollTo(0,0)});
 }
 function fmtMin(m){if(m<60)return m+" min";const h=Math.floor(m/60),r=m%60;return h+" hr"+(r?" "+r+" min":"")}
 function fmt(s){const m=Math.floor(s/60),ss=s%60;return `${m}:${ss.toString().padStart(2,"0")}`}
@@ -1143,6 +1203,7 @@ function renderDays(){
     b.title=`${DAY_NAMES[i]}${i===TODAY?" (today)":""}: ${plainText(r.title)}`;
     b.onclick=()=>initDay(i);el.appendChild(b);
   });
+  renderReminders();
 }
 // Overnight soaks are done the night before, so they never count toward "ready around".
 function secondsLeft(){
@@ -1678,6 +1739,8 @@ function renderShop(){
 renderSwapsPanel();
 initDay(TODAY);
 updateWakeLock();
+$("replayTourBtn").onclick=()=>{$("settingsPanel").hidden=true;$("settingsBtn").setAttribute("aria-expanded","false");startTour()};
+maybeStartTour();
 // Some browsers only grant the wake lock after the user interacts with the page.
 document.addEventListener("click",updateWakeLock,{once:true});
 </script>
