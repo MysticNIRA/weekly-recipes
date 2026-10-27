@@ -4,6 +4,7 @@
    A line is matched to the food named last before its first comma ("chicken broth" is broth,
    "rice, rinsed until the water runs clear" is rice); ties go to the food listed first here, so
    more specific names come first ("brown sugar" before "sugar", "peanut butter" before "butter").
+   Bony cuts (oxtails) count only the meat that comes off the bone.
    These are estimates for planning, not nutrition labels. */
 const FOODS=[
  // Fats, sweets, and things whose names contain other foods
@@ -54,6 +55,7 @@ const FOODS=[
  ["salt and water","\\bsalt\\b|\\bwater\\b|\\bice\\b|black pepper|^pepper|pepper to taste",0,0,240,0],
  // Grains, breads, and pasta
  ["lasagna noodles","lasagna noodle|lasagne",371,0.40,100,20],
+ ["fresh noodles","fresh[^,]*noodles",160,0.50,100,0],
  ["noodles","noodle|ramen|udon|soba",360,0.60,100,85],
  ["cooked rice","cooked[^,]*rice|leftover rice|steamed rice|rice, cooked",130,0.10,158,0],
  ["rice","rice",360,0.25,185,0],
@@ -66,6 +68,7 @@ const FOODS=[
  ["tostadas","tostada",480,1.20,0,12],
  ["tortillas","tortilla",300,0.80,0,45],
  ["pizza dough","pizza dough|biscuit dough|refrigerated biscuits",260,0.50,0,55],
+ ["pie crust","pie crust|pastry",450,0.80,0,230],
  ["crackers","cracker|saltine",420,0.90,0,3],
  ["french fries","fries",150,0.40,100,0],
  ["rice paper","rice paper(?: wrappers?)?",330,1.20,0,9],
@@ -88,16 +91,19 @@ const FOODS=[
  ["ham","\\bham\\b",145,1.40,140,28],
  ["lamb","lamb|goat|mutton",280,2.20,140,200],
  ["pork","pork",240,0.90,140,200],
+ ["oxtails","oxtail",130,1.40,0,0],
  ["beef","beef|steak|brisket|chuck|short rib|sirloin",220,2.00,140,300],
  ["salmon","salmon",208,2.20,0,170],
  ["tuna","tuna",116,1.10,0,140],
  ["shrimp","shrimp|prawn",85,2.00,145,15],
+ ["clams","clams",86,1.50,160,0],
  ["fish","fish|tilapia|cod|haddock|sea bass|flounder|catfish|mackerel|sardine",100,1.50,0,150],
  ["eggs","eggs?\\b",143,0.58,243,50],
  ["tofu","tofu",110,0.55,250,400],
  ["lentils","lentil",352,0.40,192,0],
  ["chickpeas","chickpea|garbanzo",139,0.45,160,250],
- ["dried beans","dried[^,]*(beans|peas|chickpeas)|black-eyed peas|pigeon peas|gandules",340,0.30,190,0],
+ ["dried beans","dried[^,]*(beans|peas|chickpeas)",340,0.30,190,0],
+ ["canned peas and beans","black-eyed peas|pigeon peas|gandules",120,0.40,170,250],
  ["green beans","green bean|long bean",31,0.60,110,0],
  ["bean sprouts","bean sprouts|sprouts",30,0.50,104,0],
  ["beans","beans",130,0.40,172,250],
@@ -125,7 +131,7 @@ const FOODS=[
  ["broccoli","broccoli",34,0.50,90,300],
  ["cauliflower","cauliflower",25,0.40,107,600],
  ["spinach","spinach",23,0.90,30,0],
- ["kale and greens","kale|collard|chard|greens|bok choy",40,0.90,67,0],
+ ["kale and greens","kale|collard|chard|greens|bok choy",40,0.90,67,250],
  ["lettuce","lettuce|romaine|salad leaves|arugula",15,0.40,47,500],
  ["cabbage","cabbage|slaw",25,0.20,89,900],
  ["cucumber","cucumber",15,0.35,120,300],
@@ -140,6 +146,7 @@ const FOODS=[
  ["kimchi","kimchi",15,0.80,150,0],
  ["ackee","ackee",151,2.20,150,0],
  ["mango","mango",60,0.50,165,200],
+ ["peaches","peach",50,0.50,170,150],
  ["dried apricots","dried apricot|apricot",241,1.50,130,8],
  ["oranges","orange",47,0.40,180,130],
  ["squash","squash|pumpkin",40,0.35,140,1000],
@@ -215,7 +222,7 @@ function measureLine(line){
   if(!m)return /to taste|optional|pinch|garnish|to serve|for serving/.test(lower)?{food,grams:0}:{food,unknown:true};
   const qty=parseNumber(m[1]),unit=m[2]||"";
   // "1 can (400 g / 15 oz)" or "2 cups (360 g)": trust the weight in brackets.
-  const bracket=lower.match(/\((\d+(?:\.\d+)?)\s*(g|kg|ml)\b[^)]*\)/);
+  const bracket=lower.match(/\((?:about\s+)?(\d+(?:\.\d+)?)\s*(g|kg|ml)\b[^)]*\)/);
   if(bracket&&!/^(g|kg|grams?|kilograms?)$/.test(unit)){
     const each=/each/.test(bracket[0])||/^(cans?|tins?)$/.test(unit);
     const g=+bracket[1]*(bracket[2]==="kg"?1000:1);

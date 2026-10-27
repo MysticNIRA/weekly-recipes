@@ -282,6 +282,8 @@ details.ingr li{margin:3px 0}
 <script src="recipes-europe.js"></script>
 <script src="recipes-africa-mideast.js"></script>
 <script src="recipes-gluten-free.js"></script>
+<script src="recipes-american-more.js"></script>
+<script src="recipes-world-more.js"></script>
 <script src="recipe-addons.js"></script>
 <script src="recipe-diet-notes.js"></script>
 <script src="servings.js"></script>
@@ -386,13 +388,15 @@ const DISH_TYPES={soup:"Soup",stew:"Stew",curry:"Curry",pasta:"Pasta",noodles:"N
 let myEntries=loadMyEntries(Object.keys(MEALS),Object.keys(DISH_TYPES));
 RECIPES.push(...myEntries.filter(cookableVersion).map(e=>myRecipeFrom(e.id,cookableVersion(e))));
 const byId=Object.fromEntries(RECIPES.map(r=>[r.id,r]));
-const cuisineList=()=>[...new Set(RECIPES.map(r=>r.cuisine))].sort();
+// A style is a cooking tradition within a cuisine ("Soul food"); it's listed and searched like a cuisine.
+const cuisineList=()=>[...new Set(RECIPES.flatMap(r=>r.style?[r.cuisine,r.style]:[r.cuisine]))].sort();
+const cuisineText=r=>r.style?`${r.cuisine} · ${r.style}`:r.cuisine;
 const CUISINES=cuisineList();
 const usedDishTypes=()=>Object.keys(DISH_TYPES).filter(t=>RECIPES.some(r=>r.tags.includes(t)))
   .sort((a,b)=>DISH_TYPES[a].localeCompare(DISH_TYPES[b]));
 const USED_DISH_TYPES=usedDishTypes();
 const recipeTypeText=r=>[r.title,...r.meal.map(m=>MEALS[m]),...r.tags.map(t=>DISH_TYPES[t]),r.byo?"build your own":"",r.mine?"my recipes":""].join(" ").toLowerCase();
-const searchTextFor=r=>recipeTypeText(r)+" "+[r.cuisine,r.desc,...r.ingredients].join(" ").toLowerCase();
+const searchTextFor=r=>recipeTypeText(r)+" "+[r.cuisine,r.style||"",r.desc,...r.ingredients].join(" ").toLowerCase();
 const SEARCH_TEXT=Object.fromEntries(RECIPES.map(r=>[r.id,searchTextFor(r)]));
 const TYPE_TEXT=Object.fromEntries(RECIPES.map(r=>[r.id,recipeTypeText(r)]));
 // "soups" should find "soup" and "berries" should find "berry".
@@ -1242,7 +1246,7 @@ function renderRecipe(){
   const head=`
     <div class="rhead">
       <div><h2 class="recipe-title">${r.title}</h2>
-      <p class="recipe-sub">${[DAY_NAMES[dayIdx],r.cuisine,mealTypeText(r),timeText(r),`serves ${r.serves}`,r.steps.length?`${r.steps.length} steps`:"no steps",costText(r),caloriesText(r),lastCookedText(r.id)].filter(Boolean).join(" · ")}</p>
+      <p class="recipe-sub">${[DAY_NAMES[dayIdx],cuisineText(r),mealTypeText(r),timeText(r),`serves ${r.serves}`,r.steps.length?`${r.steps.length} steps`:"no steps",costText(r),caloriesText(r),lastCookedText(r.id)].filter(Boolean).join(" · ")}</p>
       ${dietLabelsHtml(r)?`<div class="labels">${dietLabelsHtml(r)}</div>`:""}</div>
       <div class="controls">${favButtonHtml(r)}${r.mine?`<button class="btn secondary" data-edit="${r.id}">Edit recipe</button>`:""}<button class="btn secondary" id="swapBtn">Pick a different recipe</button></div>
     </div>
@@ -1492,7 +1496,7 @@ function renderList(){
     if(cat.maxCost&&(r.cost===null||effectiveCost(r)>=cat.maxCost))return false;
     if(cat.maxCal&&!(caloriesFor(r).calories<cat.maxCal))return false;
     if(cat.diet&&!r.diet.includes(cat.diet)&&!(cat.dietAdapt&&canBeMade(r,cat.diet)))return false;
-    if(cat.cuisine&&r.cuisine!==cat.cuisine)return false;
+    if(cat.cuisine&&r.cuisine!==cat.cuisine&&r.style!==cat.cuisine)return false;
     if(cat.show==="fav"&&!favorites.has(r.id))return false;
     if(cat.show==="byo"&&!r.byo)return false;
     if(cat.show==="mine"&&!r.mine)return false;
@@ -1540,7 +1544,7 @@ function renderList(){
     const cost=effectiveCost(r);
     return `<article class="item">
       <div class="item-top"><h3>${r.title}</h3><span class="badges">${timeText(r)?`<span class="time">${timeText(r)}</span>`:""}${cost===null?"":`<span class="cost">${cost<r.cost?`<s class="was">${r.cost.toFixed(2)}</s> `:""}${fmtCost(cost)}</span>`}</span></div>
-      <p class="meta">${[r.cuisine,mealTypeText(r),`Serves ${r.serves}`,r.steps.length?`${r.steps.length} steps`:"no steps",caloriesText(r),onDays.length?`on your plan for ${onDays.join(", ")}`:""].filter(Boolean).join(" · ")}</p>
+      <p class="meta">${[cuisineText(r),mealTypeText(r),`Serves ${r.serves}`,r.steps.length?`${r.steps.length} steps`:"no steps",caloriesText(r),onDays.length?`on your plan for ${onDays.join(", ")}`:""].filter(Boolean).join(" · ")}</p>
       ${r.desc?`<p class="dish-desc">${r.desc}</p>`:""}
       <div class="labels">${dietLabelsHtml(r)}${cat.diet&&!r.diet.includes(cat.diet)?`<span class="sticker">Can be made ${DIET_NAMES[cat.diet]}</span>`:""}${sticker}${historyStickerHtml(r.id)}</div>
       ${pantryNote}

@@ -2,7 +2,8 @@
    `desc` describes the dish (matching these instructions) for someone who has never had it.
    `diet` can include "vegan", "vegetarian", "glutenfree" (no wheat, barley, or rye as written), and
    "halal" (meaning: no pork and no alcohol; recipes
-   with meat tell the cook to buy halal-certified meat). `seafood` marks fish and shellfish dishes. */
+   with meat tell the cook to buy halal-certified meat). `seafood` marks fish and shellfish dishes. `style` is an optional
+   tradition within the cuisine ("Soul food"), shown, searched, and filtered alongside it. */
 const RECIPES=[
  {id:"garlic-pasta",title:"Garlic Butter Pasta",cuisine:"Italian",diet:["vegetarian","halal"],serves:2,cost:1.75,meal:["dinner"],tags:["pasta"],
   desc:"Spaghetti tossed in butter, gently cooked garlic, and parmesan, loosened with starchy pasta water into a glossy sauce. Simple and rich, and on the table in under half an hour.",
@@ -521,7 +522,7 @@ const RECIPES=[
    {name:"Season the shrimp",desc:"Pat the shrimp dry and toss with the Cajun seasoning.",min:2,timer:false},
    {name:"Sear the shrimp",desc:"Melt 1 tbsp butter in a large skillet over medium-high heat. Cook the shrimp in a single layer 1–2 min per side, until pink and curled into a C shape (a tight O means overcooked). Set aside.",min:4,timer:false},
    {name:"Make the pan sauce",desc:"Add the last 1 tbsp butter, the onion, and the pepper and cook 4 min. Add the garlic for 30 seconds, then the broth, scraping up the browned bits. Simmer 2 min, add the lemon juice, and return the shrimp for 30 seconds. Sprinkle with parsley and spoon over the grits.",min:7}]},
- {id:"baked-mac-cheese",title:"Baked Mac and Cheese",cuisine:"Southern U.S.",diet:["vegetarian","halal"],serves:6,cost:1.75,meal:["dinner","side"],tags:["pasta","oven"],
+ {id:"baked-mac-cheese",style:"Soul food",title:"Baked Mac and Cheese",cuisine:"Southern U.S.",diet:["vegetarian","halal"],serves:6,cost:1.75,meal:["dinner","side"],tags:["pasta","oven"],
   desc:"Southern-style baked macaroni and cheese: elbow pasta in a thick, creamy sauce of sharp cheddar and Monterey Jack, topped with more cheese and buttery breadcrumbs, and baked until bubbly and golden. Firm enough to scoop, not soupy.",
   pantry:["macaroni","butter","flour","milk","evaporated milk","mustard powder","paprika","cheddar","monterey jack","panko"],
   ingredients:["450 g (1 lb) elbow macaroni","4 tbsp butter, plus 1 tbsp melted for the topping","¼ cup (30 g) all-purpose flour","3 cups (720 ml) whole milk, warmed","1 can (354 ml / 12 oz) evaporated milk","1 tsp salt","½ tsp mustard powder","½ tsp smoked paprika","¼ tsp black pepper","340 g (3 cups) sharp cheddar, grated from a block (pre-bagged cheese makes the sauce grainy)","115 g (1 cup) Monterey Jack or Gouda, grated","½ cup panko breadcrumbs"],
