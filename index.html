@@ -491,7 +491,7 @@ function planArr(){const b=basePlan();return b.map((id,i)=>overrides[i]!==undefi
 let view="week",dayIdx=TODAY,stepIdx=0,timerId=null,secLeft=0,endsAt=0,phase="task",running=false,stepStatus=[];
 const secondsUntil=time=>Math.ceil((time-Date.now())/1000);
 let openPanels={ingr:null,swaps:false,byo:null,diet:false};
-let cat={q:"",sort:"quick",max:0,maxCost:0,prep:"",diet:"",dietAdapt:"",cuisine:"",meal:"",type:"",show:"",pantry:"",day:TODAY};
+let cat={q:"",sort:"quick",max:0,maxCost:0,maxCal:0,prep:"",diet:"",dietAdapt:"",cuisine:"",meal:"",type:"",show:"",pantry:"",day:TODAY};
 
 /* ---------- choices ---------- */
 // A recipe's `choose` list offers ways to cook it (egg doneness, steak doneness...). A step with
@@ -594,6 +594,8 @@ function addonMeta(r,a){
   if(stepsAdded)parts.push(`+${stepsAdded} step${stepsAdded>1?"s":""}`);
   if(mins)parts.push(`${mins>0?"+":"−"}${Math.abs(mins)} min`);
   if(a.cost)parts.push(`${a.cost>0?"+":"−"}$${Math.abs(a.cost).toFixed(2)}/serving`);
+  const cal=(estimateFood(alone.ingredients,alone.serves).calories??0)-(estimateFood(r.ingredients,r.serves).calories??0);
+  if(Math.abs(cal)>=10)parts.push(`${cal>0?"+":"−"}${Math.abs(cal)} cal`);
   if(a.group)parts.push("pick one of these");
   return parts.join(" · ");
 }
@@ -661,7 +663,23 @@ function planAheadHtml(r){
 function fmtMin(m){if(m<60)return m+" min";const h=Math.floor(m/60),r=m%60;return h+" hr"+(r?" "+r+" min":"")}
 function fmt(s){const m=Math.floor(s/60),ss=s%60;return `${m}:${ss.toString().padStart(2,"0")}`}
 function fmtCost(c){return "$"+c.toFixed(2)+"/serving"}
-const caloriesText=r=>r.calories?`${r.caloriesEstimated?"about ":""}${r.calories} cal/serving`:"";
+// Calories per serving, estimated from the ingredients as they'll be cooked (picked options and
+// servings included). A number the cook typed for their own recipe is kept, adjusted by what
+// their picked options add. {calories, estimated}, or calories null when nothing could be counted.
+const calorieCache=new WeakMap();
+function caloriesFor(r){
+  if(!calorieCache.has(r)){
+    const base=byId[r.id]||r,est=estimateFood(r.ingredients,r.serves).calories;
+    let result={calories:est,estimated:true};
+    if(base.mine&&base.calories!==null&&!base.caloriesEstimated){
+      const change=r===base?0:(est??0)-(estimateFood(base.ingredients,base.serves).calories??0);
+      result={calories:Math.max(0,base.calories+change),estimated:Math.abs(change)>=10};
+    }
+    calorieCache.set(r,result);
+  }
+  return calorieCache.get(r);
+}
+const caloriesText=r=>{const c=caloriesFor(r);return c.calories?`${c.estimated?"about ":""}${c.calories} cal/serving`:""};
 function isStaple(item){return STAPLES.includes(item.toLowerCase().trim())}
 
 /* ---------- swaps ---------- */
@@ -1332,13 +1350,14 @@ function renderCatalog(){
   el.innerHTML=`
   <div class="card">
     <h2 class="recipe-title">All recipes</h2>
-    <p class="recipe-sub">Want something different? Pick a recipe and it replaces that day's meal. Times are the sum of each step's timer. Costs are rough U.S. average estimates per serving — your actual prices may vary.</p>
+    <p class="recipe-sub">Want something different? Pick a recipe and it replaces that day's meal. Times are the sum of each step's timer. Costs are rough U.S. average estimates per serving — your actual prices may vary. Calories are estimated from the ingredients, so treat them as a guide, not a nutrition label.</p>
     <div class="filters">
       <input type="search" id="q" placeholder="Search, e.g. soup, pasta, chicken, breakfast" aria-label="Search recipes" value="${cat.q.replace(/"/g,"&quot;")}">
       <label>Sort <select id="sort">
         <option value="quick">Quickest first</option>
         <option value="long">Longest first</option>
         <option value="az">A to Z</option>
+        <option value="cal">Fewest calories</option>
       </select></label>
       <label>Dish type <select id="typeSel"><option value="">All types</option>${USED_DISH_TYPES.map(t=>`<option value="${t}">${DISH_TYPES[t]}</option>`).join("")}</select></label>
       <label>Cuisine <select id="cuisineSel"><option value="">All cuisines</option>${CUISINES.map(c=>`<option>${c}</option>`).join("")}</select></label>
@@ -1350,6 +1369,7 @@ function renderCatalog(){
     <div id="dietAdaptRow" hidden>${chipGroupHtml("dietAdapt","Recipes that can be changed to fit",[["","Already fits"],["yes","Also show ones that can be changed to fit"]])}</div>
     ${chipGroupHtml("max","Maximum cooking time",[[0,"Any time"],[20,"Under 20 min"],[30,"Under 30 min"],[45,"Under 45 min"]])}
     ${chipGroupHtml("maxCost","Maximum cost per serving",[[0,"Any cost"],[2,"Under $2/serving"],[3,"Under $3/serving"],[5,"Under $5/serving"]])}
+    ${chipGroupHtml("maxCal","Maximum calories per serving",[[0,"Any calories"],[400,"Under 400 cal"],[600,"Under 600 cal"],[800,"Under 800 cal"]])}
     ${chipGroupHtml("prep","Prep ahead (marinating or soaking)",[["","Any prep"],["none","No prep ahead"],["30","Up to 30 min prep"],["120","Up to 2 hr prep"]])}
     <div class="filters" style="margin-top:4px">
       <input type="text" id="pantryQ" placeholder="Ingredients you already have, comma-separated (e.g. garlic, rice, eggs)" aria-label="Ingredients you have" value="${cat.pantry.replace(/"/g,"&quot;")}">
@@ -1394,6 +1414,7 @@ function renderList(){
     if(cat.prep==="none"&&prepTotal(r))return false;
     if(cat.prep&&cat.prep!=="none"&&(prepTotal(r)>+cat.prep||r.steps.some(s=>s.prep&&s.overnight)))return false;
     if(cat.maxCost&&(r.cost===null||effectiveCost(r)>=cat.maxCost))return false;
+    if(cat.maxCal&&!(caloriesFor(r).calories<cat.maxCal))return false;
     if(cat.diet&&!r.diet.includes(cat.diet)&&!(cat.dietAdapt&&canBeMade(r,cat.diet)))return false;
     if(cat.cuisine&&r.cuisine!==cat.cuisine)return false;
     if(cat.show==="fav"&&!favorites.has(r.id))return false;
@@ -1417,6 +1438,7 @@ function renderList(){
       if(d)return d;
     }
     if(cat.sort==="az")return a.r.title.localeCompare(b.r.title);
+    if(cat.sort==="cal")return (caloriesFor(a.r).calories??Infinity)-(caloriesFor(b.r).calories??Infinity)||a.r.title.localeCompare(b.r.title);
     if(cat.sort==="long")return cookTotal(b.r)-cookTotal(a.r)||a.r.title.localeCompare(b.r.title);
     return cookTotal(a.r)-cookTotal(b.r)||a.r.title.localeCompare(b.r.title);
   });
@@ -1427,7 +1449,7 @@ function renderList(){
     const msg=cat.show==="fav"&&!favorites.size
       ?"No favorites yet. Tap ♡ Favorite on any recipe to save it here."
       :cat.show==="mine"&&!RECIPES.some(r=>r.mine)?"No recipes of your own yet. Make one in the My recipes tab, or press Copy and edit on any recipe here."
-      :"No recipes match. Try a different word, or loosen the meal, dish type, diet, cuisine, cost, time, or prep filters.";
+      :"No recipes match. Try a different word, or loosen the meal, dish type, diet, cuisine, cost, calorie, time, or prep filters.";
     L.innerHTML=`<div class="empty">${msg}</div>`;return;
   }
   L.innerHTML=withMissing.map(({r,missing})=>{

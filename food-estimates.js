@@ -1,7 +1,9 @@
 /* Rough calories and prices for common ingredients, used to estimate a cook's own recipes.
    Each food: [name, pattern, calories per 100 g, U.S. dollars per 100 g, grams per cup, grams each].
    "Each" is one of the thing (an egg, a clove, a slice, a can); leave it 0 when counting makes no sense.
-   More specific names come first ("brown sugar" before "sugar", "peanut butter" before "butter").
+   A line is matched to the food named last before its first comma ("chicken broth" is broth,
+   "rice, rinsed until the water runs clear" is rice); ties go to the food listed first here, so
+   more specific names come first ("brown sugar" before "sugar", "peanut butter" before "butter").
    These are estimates for planning, not nutrition labels. */
 const FOODS=[
  // Fats, sweets, and things whose names contain other foods
@@ -24,6 +26,10 @@ const FOODS=[
  ["chocolate","chocolate chips|chocolate",500,1.20,170,0],
  ["cocoa","cocoa",228,1.50,85,0],
  ["jam","jam|jelly|preserves",250,0.80,320,0],
+ ["oyster sauce","oyster sauce",51,0.80,270,0],
+ ["hoisin","hoisin|sweet chili sauce|bbq sauce|barbecue sauce",220,0.70,280,0],
+ ["kecap manis","kecap manis|sweet soy",300,0.80,300,0],
+ ["miso","miso",199,1.20,275,0],
  ["mayonnaise","mayonnaise|mayo",680,0.60,220,0],
  ["tahini","tahini",595,1.40,240,0],
  ["hummus","hummus",166,0.90,246,0],
@@ -39,24 +45,30 @@ const FOODS=[
  ["hot sauce","hot sauce|sriracha|tabasco",20,0.80,240,0],
  ["salsa","salsa",36,0.60,260,0],
  ["tomato paste","tomato paste",82,0.60,262,0],
- ["canned tomatoes","crushed tomatoes|diced tomatoes|canned tomatoes|tomato sauce|passata|marinara",32,0.25,245,400],
+ ["canned tomatoes","crushed tomatoes|diced tomatoes|whole tomatoes|canned tomatoes|tomato sauce|passata|marinara|pizza sauce|enchilada sauce",32,0.25,245,400],
  ["curry paste","curry paste|harissa|chili paste|gochujang",100,1.50,250,0],
  ["baking powder","baking powder|baking soda|yeast",0,1.00,200,0],
  ["vanilla","vanilla",288,10.00,208,0],
  ["cornstarch","cornstarch|corn starch",381,0.40,128,0],
- ["spices","cumin|paprika|cinnamon|turmeric|oregano|chili powder|chili flakes|garlic powder|onion powder|curry powder|garam masala|thyme|rosemary|nutmeg|allspice|coriander|cardamom|bay lea|seasoning|spice|dried herbs|italian herbs|pepper flakes",300,3.00,100,0],
+ ["spices","cumin|paprika|cinnamon|turmeric|oregano|chili powder|chili flakes|garlic powder|onion powder|curry powder|garam masala|thyme|rosemary|nutmeg|allspice|coriander|cardamom|bay lea|seasoning|spice|dried herbs|italian herbs|pepper flakes|cayenne|peppercorns|annatto|saz[oó]n|togarashi|fenugreek|cloves? \\(whole\\)|whole cloves",300,3.00,100,2],
  ["salt and water","\\bsalt\\b|\\bwater\\b|\\bice\\b|black pepper|^pepper|pepper to taste",0,0,240,0],
  // Grains, breads, and pasta
+ ["lasagna noodles","lasagna noodle|lasagne",371,0.40,100,20],
  ["noodles","noodle|ramen|udon|soba",360,0.60,100,85],
- ["cooked rice","cooked rice|leftover rice|rice, cooked",130,0.10,158,0],
+ ["cooked rice","cooked[^,]*rice|leftover rice|steamed rice|rice, cooked",130,0.10,158,0],
  ["rice","rice",360,0.25,185,0],
  ["oats","oats|oatmeal",379,0.35,80,0],
- ["couscous","couscous",376,0.60,175,0],
+ ["couscous","couscous|bulgur|freekeh",360,0.60,175,0],
  ["quinoa","quinoa",368,1.00,170,0],
  ["cornmeal","cornmeal|masa|polenta|grits",370,0.30,120,0],
  ["breadcrumbs","breadcrumbs|bread crumbs|panko",395,0.80,110,0],
  ["flour","flour",364,0.12,125,0],
+ ["tostadas","tostada",480,1.20,0,12],
  ["tortillas","tortilla",300,0.80,0,45],
+ ["pizza dough","pizza dough|biscuit dough|refrigerated biscuits",260,0.50,0,55],
+ ["crackers","cracker|saltine",420,0.90,0,3],
+ ["french fries","fries",150,0.40,100,0],
+ ["rice paper","rice paper(?: wrappers?)?",330,1.20,0,9],
  ["flatbread","pita|naan|flatbread|wrap",275,0.80,0,70],
  ["buns","\\bbuns?\\b|rolls?\\b|bagel|english muffin",280,0.70,0,55],
  ["bread","bread|toast",265,0.60,30,30],
@@ -65,6 +77,7 @@ const FOODS=[
  ["turkey bacon","turkey bacon|beef bacon",220,1.50,0,15],
  ["bacon","bacon",460,1.80,0,12],
  ["sausage","sausage|chorizo|hot dog",300,1.30,0,75],
+ ["pepperoni","pepperoni|salami",500,2.00,100,3],
  ["ground meat","ground beef|ground lamb|ground pork|minced beef",254,1.30,225,0],
  ["ground turkey or chicken","ground turkey|ground chicken",150,1.10,225,0],
  ["chicken breast","chicken breast",120,0.90,140,200],
@@ -84,14 +97,17 @@ const FOODS=[
  ["tofu","tofu",110,0.55,250,400],
  ["lentils","lentil",352,0.40,192,0],
  ["chickpeas","chickpea|garbanzo",139,0.45,160,250],
+ ["dried beans","dried[^,]*(beans|peas|chickpeas)|black-eyed peas|pigeon peas|gandules",340,0.30,190,0],
  ["green beans","green bean|long bean",31,0.60,110,0],
+ ["bean sprouts","bean sprouts|sprouts",30,0.50,104,0],
  ["beans","beans",130,0.40,172,250],
  // Dairy
  ["parmesan","parmesan|pecorino",431,2.80,100,0],
  ["feta","feta|cotija|queso fresco",264,1.80,150,0],
  ["mozzarella","mozzarella",300,1.10,112,0],
  ["ricotta","ricotta",174,0.90,246,0],
- ["cheese","cheese|cheddar",403,1.30,113,21],
+ ["paneer","paneer",321,1.50,150,0],
+ ["cheese","cheese|cheddar|monterey jack|gouda|gruy[eè]re|swiss|provolone|jack",403,1.30,113,21],
  ["yogurt","yogurt|yoghurt",61,0.45,245,0],
  ["milk","milk",61,0.10,245,0],
  // Vegetables, fruit, and herbs
@@ -119,6 +135,13 @@ const FOODS=[
  ["peas","\\bpeas",81,0.40,145,0],
  ["corn","\\bcorn\\b",86,0.40,150,100],
  ["okra","okra",33,0.80,100,12],
+ ["yuca","yuca|cassava",160,0.40,206,400],
+ ["beets","beet",43,0.35,136,150],
+ ["kimchi","kimchi",15,0.80,150,0],
+ ["ackee","ackee",151,2.20,150,0],
+ ["mango","mango",60,0.50,165,200],
+ ["dried apricots","dried apricot|apricot",241,1.50,130,8],
+ ["oranges","orange",47,0.40,180,130],
  ["squash","squash|pumpkin",40,0.35,140,1000],
  ["avocado","avocado|guacamole",160,0.80,150,150],
  ["plantains","plantain",122,0.30,150,180],
@@ -131,14 +154,36 @@ const FOODS=[
  ["dates","dates?\\b",282,1.20,150,24],
  ["olives","olive",115,1.20,135,4],
  ["nuts","almond|walnut|cashew|peanut|pecan|pistachio|nuts|seeds",600,1.60,140,0],
- ["fresh herbs","cilantro|parsley|basil|mint|dill|herbs",25,1.50,16,50]
-].map(([name,pattern,kcal,price,cup,each])=>({name,re:new RegExp(pattern,"i"),kcal,price,cup,each}));
+ ["fresh herbs","cilantro|parsley|basil|mint|dill|herbs",25,1.50,16,50],
+ ["vegetables","vegetables?|veggies",35,0.40,120,0]
+].map(([name,pattern,kcal,price,cup,each])=>({name,re:new RegExp(pattern,"i"),all:new RegExp(pattern,"gi"),kcal,price,cup,each}));
+
+// Where the last match of a food ends in some text, or -1.
+function lastMatchEnd(food,text){
+  let end=-1;
+  for(const m of text.matchAll(food.all))end=m.index+m[0].length;
+  return end;
+}
+// The food a part of a line is about: named last before the first comma, leaving out brackets.
+// Water and salt only win when nothing else is named ("kashk thinned with water" is kashk).
+function findFood(rest){
+  const plain=rest.replace(/\([^)]*\)/g," ");
+  for(const text of [plain.split(",")[0],plain,rest]){
+    const found=FOODS.map((f,i)=>({f,i,end:lastMatchEnd(f,text)})).filter(x=>x.end>=0);
+    if(!found.length)continue;
+    const real=found.filter(x=>x.f.kcal||x.f.price);
+    const pool=real.length?real:found;
+    pool.sort((a,b)=>b.end-a.end||a.i-b.i);
+    return pool[0].f;
+  }
+  return null;
+}
 
 const FOOD_FRACTIONS={"½":0.5,"¼":0.25,"¾":0.75,"⅓":1/3,"⅔":2/3,"⅛":0.125};
 // Grams in one of each unit, given the food. Units that depend on the food use its cup or "each" weight.
 function gramsPerUnit(unit,food){
   const u=unit.toLowerCase().replace(/s$/,"").replace(/\.$/,"");
-  const fixed={g:1,gram:1,kg:1000,kilogram:1000,oz:28.35,ounce:28.35,lb:453.6,pound:453.6,pinch:0.3,dash:0.5,handful:30};
+  const fixed={g:1,gram:1,kg:1000,kilogram:1000,oz:28.35,ounce:28.35,lb:453.6,pound:453.6,pinch:0.3,dash:0.5,handful:30,leave:10,leaf:10};
   if(fixed[u])return fixed[u];
   const volume={cup:1,tbsp:1/16,tablespoon:1/16,tsp:1/48,teaspoon:1/48,ml:1/240,l:1000/240,liter:1000/240,litre:1000/240};
   if(volume[u])return food.cup?food.cup*volume[u]:0;
@@ -147,7 +192,7 @@ function gramsPerUnit(unit,food){
   if(u==="bunch")return food.each||50;
   return food.each;
 }
-const UNIT_WORDS="kg|kilograms?|g|grams?|oz|ounces?|lbs?|pounds?|cups?|tbsp|tablespoons?|tsp|teaspoons?|ml|l|liters?|litres?|pinch(?:es)?|dash(?:es)?|handfuls?|sticks?|cans?|tins?|bunch(?:es)?|cloves?|slices?|pieces?|heads?|stalks?|fillets?|breasts?|thighs?|ears?|blocks?|packages?|packets?|packs?|large|medium|small";
+const UNIT_WORDS="kg|kilograms?|g|grams?|oz|ounces?|lbs?|pounds?|cups?|tbsp|tablespoons?|tsp|teaspoons?|ml|l|liters?|litres?|pinch(?:es)?|dash(?:es)?|handfuls?|sticks?|cans?|tins?|bunch(?:es)?|cloves?|slices?|pieces?|heads?|stalks?|fillets?|breasts?|thighs?|ears?|blocks?|packages?|packets?|packs?|leaves|leaf|large|medium|small";
 const AMOUNT_RE=new RegExp(`^(\\d+\\s+\\d+\\/\\d+|\\d+\\/\\d+|\\d*[½¼¾⅓⅔⅛]|\\d+(?:\\.\\d+)?)(?:\\s*(?:-|–|to)\\s*\\d+(?:\\.\\d+)?)?\\s*(?:(${UNIT_WORDS})\\b\\.?)?\\s*`,"i");
 function parseNumber(text){
   const t=text.trim();
@@ -161,10 +206,10 @@ function parseNumber(text){
 function measureLine(line){
   const text=line.trim().replace(/^[-•*]\s*/,"").replace(/^(?:the )?juice (?:of|from)\s+/i,"");
   const lower=text.toLowerCase();
-  if(/for (deep[- ])?frying/.test(lower))return {skip:"frying oil (most stays in the pan)"};
+  if(/for (deep[- ]|shallow[- ])?frying/.test(lower))return {frying:true};
   const m=lower.match(AMOUNT_RE);
   const rest=m?lower.slice(m[0].length):lower;
-  const food=FOODS.find(f=>f.re.test(rest))||FOODS.find(f=>f.re.test(lower));
+  const food=findFood(rest)||findFood(lower);
   if(!food)return {unknown:true};
   if(food.kcal===0&&food.price===0)return {food,grams:0};
   if(!m)return /to taste|optional|pinch|garnish|to serve|for serving/.test(lower)?{food,grams:0}:{food,unknown:true};
@@ -176,23 +221,33 @@ function measureLine(line){
     const g=+bracket[1]*(bracket[2]==="kg"?1000:1);
     return {food,grams:each?g*qty:g};
   }
-  const per=/^(large|medium|small)$/.test(unit)||!unit?food.each:gramsPerUnit(unit,food);
+  // "8 lettuce leaves" counts leaves, not heads of lettuce.
+  const leaves=!unit&&/\b(leaves|leaf)\b/.test(rest.split(",")[0]);
+  const per=leaves?10:/^(large|medium|small)$/.test(unit)||!unit?food.each:gramsPerUnit(unit,food);
   if(!per)return {food,unknown:true};
   return {food,grams:qty*per};
 }
-// Calories and cost per serving for a list of ingredient lines, plus the lines it couldn't count.
+// "Sauce: 3 tbsp soy sauce, 1 tbsp sugar" → ["3 tbsp soy sauce", "1 tbsp sugar"]. A comma only starts a
+// new food when an amount follows it, so "1 onion, chopped" stays one food.
+function foodParts(line){
+  const label=line.match(/^([^:\d]*):\s*/);
+  const body=label?line.slice(label[0].length):line;
+  return body.split(/[,;]\s*(?=(?:and\s+|plus\s+)?(?:\d|[½¼¾⅓⅔⅛]|pinch\b|juice of))/i).map(p=>p.replace(/^(?:and|plus)\s+/i,"").trim()).filter(Boolean);
+}
+// Calories and cost per serving for a list of ingredient lines, plus the parts it couldn't count.
+// Most frying oil stays in the pan, so fried food counts about 1 tbsp of oil soaked up per serving.
+const FRYING_OIL_PER_SERVING={kcal:120,cost:0.05};
 function estimateFood(lines,serves){
+  const n=Math.max(1,serves||1);
   let kcal=0,cost=0,counted=0;
   const missing=[];
-  for(const line of lines){
-    if(!line.trim())continue;
+  for(const line of lines.flatMap(foodParts)){
     const got=measureLine(line);
-    if(got.skip){missing.push(`${line.trim()} (${got.skip})`);continue}
+    if(got.frying){kcal+=FRYING_OIL_PER_SERVING.kcal*n;cost+=FRYING_OIL_PER_SERVING.cost*n;counted++;continue}
     if(got.unknown){missing.push(line.trim());continue}
     kcal+=got.food.kcal*got.grams/100;
     cost+=got.food.price*got.grams/100;
     counted++;
   }
-  const n=Math.max(1,serves||1);
   return {calories:counted?Math.round(kcal/n/10)*10:null,cost:counted?Math.round(cost/n*100)/100:null,counted,missing};
 }

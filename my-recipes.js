@@ -134,7 +134,7 @@ function renderMyList(){
   bindEditButtons(el);
   el.querySelectorAll("button[data-my-edit]").forEach(b=>b.onclick=()=>editRecipe(b.dataset.myEdit));
   el.querySelectorAll("button[data-my-plan]").forEach(b=>b.onclick=()=>{
-    Object.assign(cat,{q:"",show:"mine",diet:"",meal:"",type:"",cuisine:"",max:0,maxCost:0,prep:"",pantry:""});
+    Object.assign(cat,{q:"",show:"mine",diet:"",meal:"",type:"",cuisine:"",max:0,maxCost:0,maxCal:0,prep:"",pantry:""});
     setView("cat");
   });
   el.querySelectorAll("button[data-my-export]").forEach(b=>b.onclick=()=>{

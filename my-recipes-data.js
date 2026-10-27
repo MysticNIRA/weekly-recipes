@@ -85,6 +85,12 @@ function myRecipeFrom(id,d){
     if(note&&o.step>=0&&steps[o.step])a.edit={[steps[o.step].name]:{note}};
     else if(note)a.about=note;
     if(o.cost!=="")a.cost=+o.cost;
+    else{
+      // No price typed: estimate what the option adds per serving.
+      const after=ingredientLines.filter(l=>!(a.replace&&l===o.replace)).concat(myLines(o.add));
+      const change=(estimateFood(after,d.serves).cost??0)-(est.cost??0);
+      if(change>=0.01)a.cost=Math.round(change*100)/100;
+    }
     if(o.notDiet.length)a.notDiet=o.notDiet.includes("vegetarian")?[...new Set([...o.notDiet,"vegan"])]:[...o.notDiet];
     if(d.onlyOne)a.group="mine";
     return a;
