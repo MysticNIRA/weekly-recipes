@@ -1,0 +1,1662 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Weekly Recipes</title>
+<style>
+:root{--bg:#faf7f2;--card:#fff;--accent:#c0603a;--accent-ink:#fff;--line:#e6ddd2;--text:#3a332c;--muted:#7a7064;--ok:#4f804f;--soft:#f3ede4;--note:#fbf0e4;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1a17;--card:#272320;--accent:#e07b53;--accent-ink:#1d1a17;--line:#3b352f;--text:#ece5dc;--muted:#a89d90;--ok:#86b886;--soft:#312c27;--note:#382c22;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1d1a17;--card:#272320;--accent:#e07b53;--accent-ink:#1d1a17;--line:#3b352f;--text:#ece5dc;--muted:#a89d90;--ok:#86b886;--soft:#312c27;--note:#382c22;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);margin:0;padding:20px;line-height:1.45}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:980px;margin:auto;display:flex;gap:20px;align-items:flex-start}
+.main{flex:1;min-width:0}
+.side{width:240px;flex-shrink:0;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;position:sticky;top:calc(20px + env(safe-area-inset-top,0px))}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+h1{font-size:20px;margin:0}
+.tabs{display:flex;background:var(--soft);border-radius:8px;padding:3px}
+.tabs button{border:none;background:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:14px;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--card);color:var(--text);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.days{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.days button{display:flex;flex-direction:column;align-items:center;min-width:62px;padding:6px 10px;border:1px solid var(--line);background:var(--card);border-radius:6px;cursor:pointer;font-size:13px}
+.days button .t{font-size:11px;color:var(--muted)}
+.days button.today .d::after{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--accent);margin-left:4px;vertical-align:middle}
+.days button.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.days button.active .t{color:inherit;opacity:.85}
+.days button.active.today .d::after{background:var(--accent-ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px}
+.rhead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.recipe-title{font-size:19px;margin:0 0 2px}
+.recipe-sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+.swapnote{background:var(--note);border-radius:6px;padding:8px 10px;font-size:13px;margin:0 0 14px}
+.link{background:none;border:none;padding:0;color:var(--accent);text-decoration:underline;cursor:pointer;font-size:13px}
+details.ingr{border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin-bottom:14px}
+details summary{cursor:pointer;font-weight:600;font-size:14px}
+details.ingr ul{margin:8px 0 2px;padding-left:20px;font-size:14px}
+details.ingr li{margin:3px 0}
+.progress{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:8px}
+.bar{height:4px;background:var(--soft);border-radius:2px;margin-bottom:14px;overflow:hidden}
+.bar span{display:block;height:100%;background:var(--accent);transition:width .3s}
+.step-box{border:1px solid var(--line);border-radius:8px;padding:16px}
+.step-name{font-weight:600;font-size:16px;margin-bottom:6px}
+.step-desc{font-size:15px;margin:0 0 12px;max-width:68ch}
+.timer{font-size:34px;font-weight:700;color:var(--accent);margin-bottom:6px;font-variant-numeric:tabular-nums}
+.timer.grace{color:var(--muted)}
+.grace-note{font-size:13px;color:var(--muted);margin:0 0 10px}
+.checkin-note{font-size:14px;background:var(--note);border-radius:6px;padding:8px 10px;margin:0 0 12px}
+.quick-timer{display:inline-flex;align-items:center;gap:8px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;font-size:16px}
+.done-note{font-size:15px;margin:0 0 14px;max-width:68ch}
+.controls{display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:8px 14px;border:none;border-radius:6px;background:var(--accent);color:var(--accent-ink);cursor:pointer;font-size:13px}
+.btn.secondary{background:var(--soft);color:var(--text)}
+.btn:disabled{opacity:.5;cursor:default}
+.fav-btn[aria-pressed="true"]{color:var(--accent);font-weight:600}
+.settings-note{font-size:13px;color:var(--muted);margin:-4px 0 0 24px}
+.settings-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;font-size:14px}
+.settings-row:last-child{margin-bottom:0}
+.settings-row input[type="checkbox"]{width:16px;height:16px;flex-shrink:0}
+.settings-row select{max-width:100%;min-width:0;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.settings-section+.settings-section{border-top:1px solid var(--line);margin-top:14px;padding-top:14px}
+.settings-section h4{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.settings-section h5{margin:14px 0 8px;font-size:14px}
+.side h3{font-size:14px;margin:0 0 10px}
+.check-item{display:flex;align-items:flex-start;gap:8px;padding:6px 0;font-size:13px;border-bottom:1px solid var(--line)}
+.check-item .nm{flex:1}
+.check-item .mn{color:var(--muted);font-size:12px;white-space:nowrap}
+.check-item .box{width:16px;height:16px;border-radius:4px;border:1px solid var(--muted);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:11px}
+.check-item.done .box{background:var(--ok);border-color:var(--ok);color:var(--accent-ink)}
+.check-item.done .nm{color:var(--muted);text-decoration:line-through}
+.check-item.current{font-weight:600}
+.check-item.current .box{border-color:var(--accent);border-width:2px}
+.side-total{display:flex;justify-content:space-between;font-size:13px;padding-top:10px;font-weight:600}
+.done-label{color:var(--ok);font-size:15px;margin:6px 0 14px}
+/* catalogue */
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.filters input{flex:1;min-width:180px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.filters label{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.filters select{padding:7px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chips button{padding:5px 11px;border:1px solid var(--line);border-radius:999px;background:var(--card);cursor:pointer;font-size:13px}
+.chips button[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
+.count{font-size:13px;color:var(--muted);margin:0 0 10px}
+.item{border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:10px}
+.item-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
+.item h3{margin:0;font-size:16px}
+.badges{display:flex;gap:10px;align-items:baseline;flex-shrink:0}
+.item .time{font-weight:700;color:var(--accent);white-space:nowrap;font-size:15px}
+.item .cost{font-weight:700;color:var(--ok);white-space:nowrap;font-size:15px}
+.item .meta{font-size:13px;color:var(--muted);margin:2px 0 8px}
+.my-editor textarea,.my-editor input[type="text"],.my-editor input[type="number"],.my-editor select{display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);font:inherit;color:inherit}
+.my-editor textarea{resize:vertical}
+.my-field{display:block;font-size:14px;font-weight:600;margin:12px 0 0}
+.my-field.my-small{max-width:180px}
+.opt{font-weight:400;color:var(--muted);font-size:13px}
+.my-row{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:flex-end}
+.my-row .my-field{flex:1;min-width:140px}
+.my-check{display:flex;align-items:center;gap:6px;font-size:14px;margin:8px 0 0;cursor:pointer}
+.my-check input{width:16px;height:16px;flex-shrink:0}
+.my-checks{display:flex;flex-wrap:wrap;gap:0 16px}
+.my-label{font-size:14px;font-weight:600;margin:12px 0 0}
+.my-hint{font-size:13px;color:var(--muted);margin:6px 0 0}
+.my-hint:empty,.my-error:empty{display:none}
+.my-error{font-size:13px;color:var(--accent);font-weight:600;margin:6px 0 0}
+.my-head{font-size:15px;margin:20px 0 4px}
+.my-step{border:1px solid var(--line);border-radius:8px;padding:4px 14px 12px;margin:12px 0}
+.my-step legend{font-size:13px;font-weight:600;color:var(--muted);padding:0 4px}
+.my-step .controls{margin-top:10px}
+.my-section{margin-top:18px}
+.my-section summary{font-weight:600}
+.my-actions{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.missing{font-size:13px;color:var(--accent);margin:2px 0 8px}
+.have-all{font-size:13px;color:var(--ok);margin:2px 0 8px}
+.item details{margin-bottom:10px;font-size:14px}
+.item details summary{font-weight:500;font-size:13px;color:var(--muted)}
+.item details h4{font-size:13px;margin:10px 0 4px}
+.item details ul,.item details ol{margin:0;padding-left:20px}
+.item details li{margin:3px 0}
+.item .cost .was{color:var(--muted);font-weight:400;font-size:13px}
+.swap-cat{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.swap-cat-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px}
+.swap-cat-head label,.swap-row label{display:flex;align-items:center;gap:8px;cursor:pointer}
+.swap-cat input[type="checkbox"],.swap-row input[type="checkbox"]{width:16px;height:16px;flex-shrink:0}
+.swap-cat details{margin-top:8px}
+.swap-cat summary{font-weight:500;font-size:13px;color:var(--muted)}
+.swap-row{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.swap-cat details .swap-row:first-of-type{margin-top:8px}
+.swap-row select{max-width:100%;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);font-size:13px}
+.swap-meta{display:block;flex-basis:100%;font-size:12px;color:var(--muted)}
+.swap-cat-head .swap-meta{flex-basis:auto}
+.swap-use{display:block;font-size:13px;color:var(--ok)}
+.swap-tag{margin-left:6px;padding:1px 8px;border:1px solid var(--line);border-radius:999px;background:var(--soft);font-size:12px;cursor:pointer}
+.labels{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.recipe-sub+.labels{margin:-8px 0 14px}
+.diet-label{font-size:12px;padding:2px 9px;border-radius:999px;border:1px solid var(--ok);color:var(--ok)}
+.serves-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-size:14px;margin:0 0 10px}
+.serves-row input{width:64px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);text-align:center;font-size:15px}
+.serves-step{min-width:36px;font-size:16px;padding:4px 10px}
+.halal-note{font-size:13px;color:var(--muted);margin:0 0 14px}
+.safety-note{font-size:13px;margin:6px 0 0;padding:6px 10px;border-left:3px solid var(--line);color:var(--muted)}
+.recipe-safety{margin:0 0 14px}
+.dish-desc{font-size:14px;margin:0 0 14px;max-width:68ch}
+.item .dish-desc{margin:0 0 10px}
+.sticker{display:inline-block;font-size:12px;padding:2px 9px;border-radius:999px;background:var(--note);color:var(--accent)}
+.sticker.mine{background:var(--ok);color:var(--accent-ink)}
+.choose-box{border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin-bottom:14px}
+.choose-q{font-weight:600;font-size:14px;margin-bottom:8px}
+.choose-box .chips{margin-bottom:6px}
+.choose-note{font-size:13px;color:var(--muted);margin:0}
+.step-choice{font-size:13px;background:var(--note);border-radius:6px;padding:6px 10px;margin:0 0 12px}
+.byo-group{margin:8px 0 0;font-size:14px}
+.addon-row{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--line);font-size:15px;cursor:pointer}
+.addon-row input{width:20px;height:20px;flex-shrink:0;margin-top:1px}
+.addon-meta{display:block;font-size:12px;color:var(--muted)}
+.addon-step{display:inline-block;font-size:12px;padding:2px 9px;border-radius:999px;background:var(--note);color:var(--accent);margin-bottom:6px}
+.byo-group strong{display:block;font-size:13px}
+/* shopping list */
+.shop-days{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.shop-days label{display:flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--line);border-radius:999px;font-size:13px;cursor:pointer}
+.shop-days input{width:16px;height:16px}
+.shop-summary{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;font-size:14px;margin:0 0 12px}
+.shop-section h3{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:16px 0 4px}
+.shop-item{display:flex;align-items:flex-start;gap:8px;padding:9px 0;border-top:1px solid var(--line);font-size:15px}
+.shop-item>label{display:flex;gap:10px;align-items:flex-start;flex:1;cursor:pointer;min-width:0}
+.shop-item input{width:20px;height:20px;flex-shrink:0;margin-top:1px}
+.shop-name{font-weight:600}
+.shop-amt{color:var(--muted)}
+.shop-for{display:block;font-size:12px;color:var(--muted)}
+.shop-item.got .shop-name,.shop-item.got .shop-amt{text-decoration:line-through;color:var(--muted)}
+.shop-add{display:flex;gap:8px;margin:14px 0 0}
+.shop-add input{flex:1;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.shop-save{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.saved-lists{margin-top:18px;padding-top:4px;border-top:1px solid var(--line)}
+.copy-box{display:block;width:100%;box-sizing:border-box;margin-top:8px;font:inherit;font-size:13px;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:inherit}
+.shop-item .btn{padding:5px 10px;font-size:12px;flex-shrink:0}
+.gather-head{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:14px 0 4px}
+.gather-row{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--line);font-size:15px;cursor:pointer}
+.gather-row input{width:20px;height:20px;flex-shrink:0;margin-top:1px}
+.gather-row.got>span{color:var(--muted);text-decoration:line-through}
+.empty{padding:20px;text-align:center;color:var(--muted);font-size:14px}
+@media (max-width:760px){.wrap{flex-direction:column}.side{width:100%;position:static}.rhead{flex-direction:column}}
+@media (prefers-reduced-motion:reduce){.bar span{transition:none}}
+/* accessibility settings (colors are set from JS, see applyLook) */
+:root[data-text="large"] body{zoom:1.2}
+:root[data-text="xl"] body{zoom:1.4}
+:root[data-readable] body{font-family:Verdana,Tahoma,"DejaVu Sans",system-ui,sans-serif;letter-spacing:.04em;word-spacing:.12em;line-height:1.75}
+:root[data-contrast] .btn.secondary,:root[data-contrast] .chips button{border:1px solid var(--text)}
+:root[data-contrast] .card,:root[data-contrast] .item,:root[data-contrast] .step-box{border-width:2px}
+:root[data-reduce-motion] *,:root[data-reduce-motion] *::before,:root[data-reduce-motion] *::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+</style></head>
+<body>
+<div class="wrap">
+  <div class="main">
+    <div class="topbar">
+      <h1>Weekly Recipes</h1>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div class="tabs" role="tablist">
+          <button role="tab" id="tabWeek" aria-selected="true">This week</button>
+          <button role="tab" id="tabCat" aria-selected="false">All recipes</button>
+          <button role="tab" id="tabShop" aria-selected="false">Shopping list</button>
+          <button role="tab" id="tabMine" aria-selected="false">My recipes</button>
+        </div>
+        <button class="btn secondary" id="swapsBtn" aria-expanded="false" aria-controls="swapsPanel">Swaps</button>
+        <button class="btn secondary" id="settingsBtn" aria-expanded="false" aria-controls="settingsPanel">Settings</button>
+      </div>
+    </div>
+    <div class="card" id="swapsPanel" hidden style="margin-bottom:16px"></div>
+    <div class="card" id="settingsPanel" hidden style="margin-bottom:16px">
+      <h3 style="margin:0 0 12px;font-size:14px">Settings</h3>
+      <section class="settings-section" aria-labelledby="cookingHead">
+        <h4 id="cookingHead">Cooking</h4>
+        <label class="settings-row"><input type="checkbox" id="skipTimersChk"> Skip step timers — just check off steps at your own pace</label>
+        <label class="settings-row"><input type="checkbox" id="cheapModeChk"> Plan this week with the cheapest recipes (any day you've swapped yourself stays as you set it)</label>
+        <label class="settings-row"><input type="checkbox" id="checkInChk"> Check in with a soft chime if a step without a timer takes much longer than usual</label>
+        <label class="settings-row"><input type="checkbox" id="gatherFirstChk"> Start each recipe with a "get everything out" checklist of ingredients and tools</label>
+        <label class="settings-row"><input type="checkbox" id="keepAwakeChk"> Keep the screen on while the app is open, so it doesn't lock mid-recipe</label>
+        <p class="settings-note" id="keepAwakeNote" hidden></p>
+      </section>
+      <section class="settings-section" aria-labelledby="a11yHead">
+        <h4 id="a11yHead">Accessibility</h4>
+        <label class="settings-row">Text size <select id="textSizeSel"></select></label>
+        <label class="settings-row">Light or dark <select id="themeSel"></select></label>
+        <label class="settings-row">Colors <select id="colorModeSel"></select></label>
+        <label class="settings-row"><input type="checkbox" id="highContrastChk"> High contrast — darker text and stronger outlines</label>
+        <label class="settings-row"><input type="checkbox" id="readableFontChk"> Easier-to-read text — more space between letters, words, and lines</label>
+        <label class="settings-row"><input type="checkbox" id="reduceMotionChk"> Reduce motion — turn off animations</label>
+        <h5>Read aloud</h5>
+        <label class="settings-row"><input type="checkbox" id="autoReadChk"> Read each new step out loud when you get to it</label>
+        <label class="settings-row">Voice <select id="voiceSel"></select></label>
+        <div class="settings-row"><label for="speechRateSel">Reading speed</label> <select id="speechRateSel"></select> <button class="btn secondary" id="testVoiceBtn">🔊 Test voice</button></div>
+        <p class="settings-note" id="speechNote" style="margin-left:0">Every step also has a 🔊 Read step button, and the ingredient list has one too.</p>
+      </section>
+    </div>
+    <div id="weekView">
+      <div class="days" id="days"></div>
+      <div class="card" id="recipeCard"></div>
+    </div>
+    <div id="catView" hidden></div>
+    <div id="shopView" hidden></div>
+    <div id="mineView" hidden></div>
+  </div>
+  <aside class="side" id="side">
+    <h3>Checklist</h3>
+    <div id="checklist"></div>
+  </aside>
+</div>
+<script src="recipes.js"></script>
+<script src="recipes-american.js"></script>
+<script src="recipes-americas.js"></script>
+<script src="recipes-asia.js"></script>
+<script src="recipes-europe.js"></script>
+<script src="recipes-africa-mideast.js"></script>
+<script src="recipes-gluten-free.js"></script>
+<script src="recipe-addons.js"></script>
+<script src="recipe-diet-notes.js"></script>
+<script src="servings.js"></script>
+<script src="food-estimates.js"></script>
+<script src="my-recipes-data.js"></script>
+<script src="my-recipes.js"></script>
+<script src="shopping-lists.js"></script>
+<script>
+/* Common ingredient swaps, grouped by food category. `match` finds the ingredient lines a swap
+   applies to. Each swap has one or more replacement `options`; `save` is a rough per-serving
+   saving in U.S. dollars (an estimate, like recipe costs). `kind` says why you'd use it, and
+   `notIn` lists recipes where the swap would ruin the dish. */
+const SWAP_CATEGORIES=[
+ ["meat","Meat & fish"],
+ ["veg","Vegetables"],
+ ["fruit","Fruit"],
+ ["herbs","Herbs & spices"],
+ ["dairy","Dairy"],
+ ["pantry","Pantry basics"]
+];
+const SWAP_KINDS={cheaper:"Cheaper",pantry:"Don't have it?"};
+const SWAPS=[
+ {id:"salmon",cat:"meat",kind:"cheaper",from:"Fresh salmon fillets",match:/salmon fillets/i,options:[
+   {to:"frozen salmon fillets (thaw overnight in the fridge first)",save:2.50},
+   {to:"canned salmon, drained (skip the oven: warm it in a pan 3–4 min with the oil and seasonings)",save:3.50},
+   {to:"frozen tilapia fillets (bake 10–12 min)",save:3.00}]},
+ {id:"roast",cat:"meat",kind:"cheaper",from:"Top round or sirloin roast",match:/beef roast/i,options:[
+   {to:"bottom round or eye of round roast (cooks the same way)",save:1.00},
+   {to:"pork loin roast (cook to 145°F / 63°C)",save:1.75}]},
+ {id:"ground-beef",cat:"meat",kind:"cheaper",from:"Ground beef",match:/ground beef/i,options:[
+   {to:"half the beef plus 1 can of lentils or beans, drained (stir in with the spices)",save:0.60},
+   {to:"ground turkey (same amount, same cooking)",save:0.30},
+   {to:"no meat: 2 cans of lentils or beans per 450 g (1 lb), drained",save:1.20}]},
+ {id:"chicken-breast",cat:"meat",kind:"cheaper",from:"Chicken breasts",match:/chicken breasts/i,options:[
+   {to:"boneless chicken thighs (same weight, cook 1–2 min longer)",save:0.40},
+   {to:"canned chicken, drained (add it with the rice; it only needs heating)",save:0.20}]},
+ {id:"pepperoni",cat:"meat",kind:"cheaper",from:"Pepperoni",match:/pepperoni/i,options:[
+   {to:"leftover vegetables or cooked meat you already have",save:0.40},
+   {to:"nothing: a plain cheese pizza",save:0.45}]},
+ {id:"broccoli",cat:"veg",kind:"cheaper",from:"Fresh broccoli",match:/broccoli/i,options:[
+   {to:"frozen broccoli (cook from frozen, 1 min longer)",save:0.30}]},
+ {id:"snap-peas",cat:"veg",kind:"cheaper",from:"Snap peas",match:/snap peas/i,options:[
+   {to:"frozen peas",save:0.35},
+   {to:"frozen green beans",save:0.35}]},
+ {id:"bell-pepper",cat:"veg",kind:"cheaper",from:"Fresh bell pepper",match:/bell pepper/i,notIn:["greek-salad","jollof-rice"],options:[
+   {to:"frozen pepper strips",save:0.30},
+   {to:"an extra onion",save:0.40}]},
+ {id:"spinach",cat:"veg",kind:"cheaper",from:"Fresh baby spinach",match:/baby spinach/i,options:[
+   {to:"frozen spinach, thawed and squeezed dry",save:0.25}]},
+ {id:"citrus",cat:"fruit",kind:"pantry",from:"Fresh lemon or lime",match:/\b(lemon|lime)\b/i,options:[
+   {to:"bottled lemon or lime juice (about 2 tbsp per fruit)",save:0.15},
+   {to:"a splash of vinegar (about 1 tsp per fruit)",save:0.15}]},
+ {id:"olives",cat:"fruit",kind:"cheaper",from:"Kalamata olives",match:/kalamata/i,options:[
+   {to:"canned black olives",save:0.60},
+   {to:"leave them out",save:0.70}]},
+ {id:"fresh-basil",cat:"herbs",kind:"pantry",from:"Fresh basil",match:/basil leaves/i,options:[
+   {to:"1 tsp dried basil",save:0.20}]},
+ {id:"fresh-ginger",cat:"herbs",kind:"pantry",from:"Fresh ginger",match:/fresh ginger/i,options:[
+   {to:"¼ tsp ground ginger per 1 tbsp fresh",save:0.15},
+   {to:"ginger paste from a tube (same amount)",save:0.05}]},
+ {id:"garlic",cat:"herbs",kind:"pantry",from:"Fresh garlic",match:/garlic clove/i,options:[
+   {to:"⅛ tsp garlic powder per clove (add it with the liquids, it burns fast)",save:0.05},
+   {to:"jarred minced garlic (½ tsp per clove)",save:0.03}]},
+ {id:"smoked-paprika",cat:"herbs",kind:"pantry",from:"Smoked paprika",match:/smoked paprika/i,options:[
+   {to:"regular paprika",save:0.05}]},
+ {id:"parmesan",cat:"dairy",kind:"cheaper",from:"Wedge parmesan",match:/parmesan/i,options:[
+   {to:"store-brand grated parmesan from the shaker",save:0.40}]},
+ {id:"feta",cat:"dairy",kind:"cheaper",from:"Feta",match:/feta/i,options:[
+   {to:"queso fresco or any store-brand crumbly cheese",save:0.50}]},
+ {id:"shredded-cheese",cat:"dairy",kind:"cheaper",from:"Bagged shredded cheese",match:/shredded (cheddar|mozzarella|cheese)/i,options:[
+   {to:"a store-brand block, grated yourself",save:0.30}]},
+ {id:"heavy-cream",cat:"dairy",kind:"pantry",from:"Heavy cream",match:/heavy cream/i,options:[
+   {to:"milk plus 1 tbsp melted butter per ½ cup",save:0.20},
+   {to:"evaporated milk (same amount)",save:0.15}]},
+ {id:"milk",cat:"dairy",kind:"pantry",from:"Milk",match:/(?<!(coconut|evaporated) )\bmilk\b/i,options:[
+   {to:"powdered milk mixed with water",save:0.10},
+   {to:"plain water (a little less rich)",save:0.15}]},
+ {id:"sour-cream",cat:"dairy",kind:"pantry",from:"Sour cream",match:/sour cream/i,notIn:["borscht"],options:[
+   {to:"plain yogurt",save:0.10}]},
+ {id:"olive-oil",cat:"pantry",kind:"cheaper",from:"Olive oil",match:/olive oil/i,options:[
+   {to:"vegetable or canola oil",save:0.10}]},
+ {id:"broth",cat:"pantry",kind:"cheaper",from:"Boxed broth",match:/broth/i,options:[
+   {to:"water plus 1 bouillon cube per 2 cups",save:0.30},
+   {to:"water plus an extra ½ tsp salt (less flavor)",save:0.35}]},
+ {id:"honey",cat:"pantry",kind:"pantry",from:"Honey",match:/honey/i,options:[
+   {to:"the same amount of sugar or brown sugar",save:0.05}]},
+ {id:"sesame-oil",cat:"pantry",kind:"pantry",from:"Sesame oil",match:/sesame oil/i,options:[
+   {to:"any cooking oil (less nutty)",save:0.05},
+   {to:"leave it out",save:0.05}]}
+];
+const MIN_COST=0.25;
+const MEALS={breakfast:"Breakfast",lunch:"Lunch",dinner:"Dinner",side:"Side dish",dessert:"Dessert",snack:"Snack"};
+const DISH_TYPES={soup:"Soup",stew:"Stew",curry:"Curry",pasta:"Pasta",noodles:"Noodles",rice:"Rice dishes",
+  sandwich:"Sandwiches & burgers",wrap:"Tacos & wraps",salad:"Salad",eggs:"Eggs",bowl:"Bowls",stirfry:"Stir-fry",
+  oven:"Baked & roasted",grill:"Grilled & seared",onepot:"One pot",sheetpan:"Sheet pan",beans:"Beans & lentils",
+  bread:"Breads & flatbreads",dumplings:"Dumplings & pastries",pancakes:"Pancakes & French toast",fried:"Fried",
+  dip:"Dips & spreads",pizza:"Pizza",sweets:"Sweets & baking"};
+// The cook's own finished recipes join the built-in ones (see my-recipes-data.js).
+let myEntries=loadMyEntries(Object.keys(MEALS),Object.keys(DISH_TYPES));
+RECIPES.push(...myEntries.filter(cookableVersion).map(e=>myRecipeFrom(e.id,cookableVersion(e))));
+const byId=Object.fromEntries(RECIPES.map(r=>[r.id,r]));
+const cuisineList=()=>[...new Set(RECIPES.map(r=>r.cuisine))].sort();
+const CUISINES=cuisineList();
+const usedDishTypes=()=>Object.keys(DISH_TYPES).filter(t=>RECIPES.some(r=>r.tags.includes(t)))
+  .sort((a,b)=>DISH_TYPES[a].localeCompare(DISH_TYPES[b]));
+const USED_DISH_TYPES=usedDishTypes();
+const recipeTypeText=r=>[r.title,...r.meal.map(m=>MEALS[m]),...r.tags.map(t=>DISH_TYPES[t]),r.byo?"build your own":"",r.mine?"my recipes":""].join(" ").toLowerCase();
+const searchTextFor=r=>recipeTypeText(r)+" "+[r.cuisine,r.desc,...r.ingredients].join(" ").toLowerCase();
+const SEARCH_TEXT=Object.fromEntries(RECIPES.map(r=>[r.id,searchTextFor(r)]));
+const TYPE_TEXT=Object.fromEntries(RECIPES.map(r=>[r.id,recipeTypeText(r)]));
+// "soups" should find "soup" and "berries" should find "berry".
+function wordForms(w){
+  const forms=[w];
+  if(w.length>4&&w.endsWith("ies"))forms.push(w.slice(0,-3)+"y");
+  if(w.length>4&&w.endsWith("es"))forms.push(w.slice(0,-2));
+  if(w.length>3&&w.endsWith("s"))forms.push(w.slice(0,-1));
+  return forms;
+}
+const textHasAll=(text,words)=>words.every(w=>wordForms(w).some(f=>text.includes(f)));
+function mealTypeText(r){
+  const meals=r.meal.map(m=>MEALS[m]).join(", "),types=r.tags.map(t=>DISH_TYPES[t]).join(", ");
+  return [meals,types].filter(Boolean).join(" · ");
+}
+function dietLabelsHtml(r){
+  const labels=[];
+  if(r.diet.includes("vegan"))labels.push("Vegan");
+  else if(r.diet.includes("vegetarian"))labels.push("Vegetarian");
+  if(r.diet.includes("halal"))labels.push("Halal-friendly");
+  if(r.diet.includes("glutenfree"))labels.push("Gluten-free");
+  return labels.map(l=>`<span class="diet-label">${l}</span>`).join("")+(r.byo?`<span class="sticker">Build your own</span>`:"")+(r.mine?`<span class="sticker mine">My recipe</span>`:"");
+}
+// Halal-friendly recipes with land-animal meat are only halal if the meat itself is certified.
+const needsHalalMeat=r=>r.diet.includes("halal")&&!r.diet.includes("vegetarian")&&!r.seafood;
+const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const DAY_NAMES=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const DEFAULT_PLAN=["garlic-pasta","sheet-chicken","stir-fry","salmon","pizza","tacos","roast"];
+const TODAY=(new Date().getDay()+6)%7;
+const STAPLES=["salt","pepper","water","sugar"];
+
+/* ---------- persisted state ---------- */
+const OVERRIDES_KEY="weekly-recipes-overrides";
+const SETTINGS_KEY="weekly-recipes-settings";
+
+// Keeps only day swaps (day 0–6 -> recipe id) for recipes that still exist, so a renamed or
+// removed recipe can't leave a day with nothing to show.
+function cleanOverrides(saved){
+  const clean={};
+  for(const [day,id] of Object.entries(saved&&typeof saved==="object"?saved:{}))
+    if(/^[0-6]$/.test(day)&&Object.hasOwn(byId,id))clean[day]=id;
+  return clean;
+}
+let overrides={};
+try{overrides=cleanOverrides(JSON.parse(localStorage.getItem(OVERRIDES_KEY)||"null"))}catch(e){}
+function saveOverrides(){try{localStorage.setItem(OVERRIDES_KEY,JSON.stringify(overrides))}catch(e){}}
+
+const FAVORITES_KEY="weekly-recipes-favorites";
+let favorites=new Set();
+try{const s=JSON.parse(localStorage.getItem(FAVORITES_KEY)||"null");if(Array.isArray(s))favorites=new Set(s.filter(id=>id in byId))}catch(e){}
+function saveFavorites(){try{localStorage.setItem(FAVORITES_KEY,JSON.stringify([...favorites]))}catch(e){}}
+function favButtonHtml(r){
+  const on=favorites.has(r.id);
+  return `<button class="btn secondary fav-btn" data-fav="${r.id}" aria-pressed="${on}">${on?"♥ Favorited":"♡ Favorite"}</button>`;
+}
+function bindFavButtons(root,rerender){
+  root.querySelectorAll("button[data-fav]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.fav;
+    if(favorites.has(id))favorites.delete(id);else favorites.add(id);
+    saveFavorites();
+    rerender();
+  });
+}
+
+const TEXT_SIZES={normal:"Normal",large:"Large",xl:"Extra large"};
+const THEMES={system:"Match my device",light:"Light",dark:"Dark"};
+const COLOR_MODES={default:"Standard",rg:"Red-green friendly (protanopia, deuteranopia)",by:"Blue-yellow friendly (tritanopia)"};
+const SPEECH_RATES={"0.75":"Slower","1":"Normal","1.25":"Faster"};
+const DEFAULT_SETTINGS={skipTimers:false,cheapMode:false,keepAwake:true,gatherFirst:true,checkIn:true,swaps:{},choices:{},addons:{},servings:{},
+  textSize:"normal",theme:"system",colorMode:"default",highContrast:false,readableFont:false,reduceMotion:false,autoRead:false,speechRate:1,voice:""};
+let settings={...DEFAULT_SETTINGS};
+try{const s=JSON.parse(localStorage.getItem(SETTINGS_KEY)||"null");if(s&&typeof s==="object")settings={...settings,...s}}catch(e){}
+settings.swaps=cleanSwapSettings(settings.swaps);
+settings.choices=cleanChoiceSettings(settings.choices);
+settings.addons=cleanAddonSettings(settings.addons);
+settings.servings=cleanServingSettings(settings.servings);
+// Saved settings come from the browser, so anything unexpected falls back to its default.
+const oneOf=(value,choices,key)=>Object.hasOwn(choices,value)?value:DEFAULT_SETTINGS[key];
+settings.textSize=oneOf(settings.textSize,TEXT_SIZES,"textSize");
+settings.theme=oneOf(settings.theme,THEMES,"theme");
+settings.colorMode=oneOf(settings.colorMode,COLOR_MODES,"colorMode");
+settings.speechRate=+oneOf(String(settings.speechRate),SPEECH_RATES,"speechRate");
+for(const key of ["highContrast","readableFont","reduceMotion","autoRead"])settings[key]=settings[key]===true;
+settings.gatherFirst=settings.gatherFirst!==false;
+settings.checkIn=settings.checkIn!==false;
+if(typeof settings.voice!=="string")settings.voice="";
+// Keeps only known swaps with a valid option. Older saves stored a plain list of swap ids.
+function cleanSwapSettings(saved){
+  const entries=Array.isArray(saved)?saved.map(id=>[id,0]):Object.entries(saved&&typeof saved==="object"?saved:{});
+  const clean={};
+  for(const [id,idx] of entries){
+    const s=SWAPS.find(x=>x.id===id);
+    if(s&&Number.isInteger(idx)&&idx>=0&&idx<s.options.length)clean[id]=idx;
+  }
+  return clean;
+}
+// Keeps only choices ("recipeId.choiceId" -> option index) that still exist in a recipe.
+function cleanChoiceSettings(saved){
+  const clean={};
+  for(const [key,idx] of Object.entries(saved&&typeof saved==="object"?saved:{})){
+    const [rid,cid]=key.split("."),c=byId[rid]?.choose?.find(x=>x.id===cid);
+    if(c&&Number.isInteger(idx)&&idx>=0&&idx<c.options.length)clean[key]=idx;
+  }
+  return clean;
+}
+// Keeps only add-on ids (per recipe) that still exist.
+function cleanAddonSettings(saved){
+  const clean={};
+  for(const [rid,ids] of Object.entries(saved&&typeof saved==="object"?saved:{})){
+    const known=(byId[rid]?.addons||[]).map(a=>a.id);
+    const kept=Array.isArray(ids)?ids.filter(id=>known.includes(id)):[];
+    if(kept.length)clean[rid]=kept;
+  }
+  return clean;
+}
+// How many people each recipe is cooked for, when the cook changed it: {recipe id: 1 to MAX_SERVINGS}.
+function cleanServingSettings(saved){
+  const clean={};
+  for(const [rid,n] of Object.entries(saved&&typeof saved==="object"?saved:{}))
+    if(byId[rid]&&Number.isInteger(n)&&n>=1&&n<=MAX_SERVINGS&&n!==byId[rid].serves)clean[rid]=n;
+  return clean;
+}
+function saveSettings(){try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings))}catch(e){}}
+
+const CHEAP_PLAN=RECIPES.filter(r=>!r.mine).sort((a,b)=>a.cost-b.cost).slice(0,7).map(r=>r.id);
+function basePlan(){return settings.cheapMode?CHEAP_PLAN:DEFAULT_PLAN}
+function planArr(){const b=basePlan();return b.map((id,i)=>overrides[i]!==undefined?overrides[i]:id)}
+
+let view="week",dayIdx=TODAY,stepIdx=0,timerId=null,secLeft=0,endsAt=0,phase="task",running=false,stepStatus=[];
+const secondsUntil=time=>Math.ceil((time-Date.now())/1000);
+let openPanels={ingr:null,swaps:false,byo:null,diet:false};
+let cat={q:"",sort:"quick",max:0,maxCost:0,prep:"",diet:"",dietAdapt:"",cuisine:"",meal:"",type:"",show:"",pantry:"",day:TODAY};
+
+/* ---------- choices ---------- */
+// A recipe's `choose` list offers ways to cook it (egg doneness, steak doneness...). A step with
+// `by` names one of those choices and takes its timer from `mins`, one per option.
+// Options marked `undercooked` get a food-safety note when picked.
+const UNDERCOOKED_NOTE="Food safety: runny or pink centers aren't fully cooked, so there's a small risk of food poisoning. If you're pregnant, cooking for young children or older adults, or have a weakened immune system, pick a fully cooked option.";
+const safetyNoteHtml=(text,extraClass="")=>`<p class="safety-note ${extraClass}"><strong>⚠</strong> ${text}</p>`;
+const findChoice=(r,cid)=>r.choose.find(c=>c.id===cid);
+function choiceIdx(r,c){
+  const v=settings.choices[r.id+"."+c.id];
+  return v===undefined?(c.pick||0):v;
+}
+function stepMin(r,i){
+  const s=r.steps[i];
+  if(!s)return 0;
+  return s.by?s.mins[choiceIdx(r,findChoice(r,s.by))]:s.min;
+}
+const stepChoiceText=(r,s)=>{const c=findChoice(r,s.by);return `Timed for ${c.options[choiceIdx(r,c)].label.toLowerCase()}`};
+function chooseBoxHtml(r){
+  return (r.choose||[]).map(c=>{
+    const picked=c.options[choiceIdx(r,c)];
+    return `<div class="choose-box">
+      <div class="choose-q">${c.label}</div>
+      <div class="chips" role="group" aria-label="${c.label}">
+        ${c.options.map((o,i)=>`<button data-choice="${c.id}" data-idx="${i}" aria-pressed="${o===picked}">${o.label}</button>`).join("")}
+      </div>
+      <p class="choose-note">${picked.label}: ${picked.note}</p>
+      ${picked.undercooked?safetyNoteHtml(UNDERCOOKED_NOTE):""}
+    </div>`;
+  }).join("");
+}
+/* ---------- build-your-own add-ons ---------- */
+// A recipe with the cook's add-ons applied: ingredients added or replaced, steps inserted or
+// given notes and new times, diet labels and cost adjusted, then scaled to the number of people the
+// cook picked (servings.js). Without either it is the recipe itself.
+const pickedAddons=r=>(r.addons||[]).filter(a=>(settings.addons[r.id]||[]).includes(a.id));
+const addonCache=new Map();
+function applyAddons(r,picked){
+  const ingredients=[...r.ingredients],steps=r.steps.map(s=>({...s}));
+  let diet=[...r.diet],cost=r.cost??0;
+  for(const a of picked){
+    for(const [from,to] of a.replace||[]){
+      const i=ingredients.findIndex(line=>line.includes(from));
+      if(i<0)continue;
+      if(to)ingredients[i]=to;else ingredients.splice(i,1);
+    }
+    ingredients.push(...(a.add||[]));
+    for(const [name,change] of Object.entries(a.edit||{})){
+      const st=steps.find(x=>x.name===name);
+      if(!st)continue;
+      if(change.note)st.notes=[...(st.notes||[]),{label:a.label,text:change.note}];
+      if(change.min)st.min=change.min;
+    }
+    for(const added of a.steps||[]){
+      const at=steps.findIndex(x=>x.name===(added.after||added.before))+(added.after?1:0);
+      const {after,before,...step}=added;
+      steps.splice(at,0,{...step,addon:a.label});
+    }
+    diet=diet.filter(d=>!(a.notDiet||[]).includes(d));
+    cost+=a.cost||0;
+  }
+  return {...r,ingredients,steps,diet,cost:r.cost===null&&!picked.some(a=>a.cost)?null:Math.max(MIN_COST,Math.round(cost*100)/100)};
+}
+const servingsFor=r=>settings.servings[r.id]||r.serves;
+function withAddons(r){
+  const picked=pickedAddons(r),serves=servingsFor(r);
+  if(!picked.length&&serves===r.serves)return r;
+  const key=r.id+":"+picked.map(a=>a.id).join(",")+":"+serves;
+  if(!addonCache.has(key)){
+    const withOptions=picked.length?applyAddons(r,picked):r;
+    addonCache.set(key,serves===r.serves?withOptions:scaleRecipe(withOptions,serves));
+  }
+  return addonCache.get(key);
+}
+function setServings(r,n){
+  n=Math.round(n);
+  if(!(n>=1&&n<=MAX_SERVINGS))return;
+  if(n===r.serves)delete settings.servings[r.id];else settings.servings[r.id]=n;
+  saveSettings();renderRecipe();
+}
+// "Cooking for [4] people", with a note on what changes when it isn't the recipe's own number.
+function servingsHtml(r){
+  const base=byId[r.id],scaled=r.serves!==base.serves;
+  const panNote=base.tags.some(t=>["sweets","bread","pizza","oven","sheetpan"].includes(t))?" For a much bigger batch, use two pans rather than one bigger one, since baking times are for this pan size.":"";
+  return `<div class="serves-row">
+      <label for="servesInput">Cooking for</label>
+      <button class="btn secondary serves-step" id="servesLess" aria-label="One person fewer" ${r.serves<=1?"disabled":""}>−</button>
+      <input type="number" id="servesInput" min="1" max="${MAX_SERVINGS}" inputmode="numeric" value="${r.serves}">
+      <button class="btn secondary serves-step" id="servesMore" aria-label="One person more" ${r.serves>=MAX_SERVINGS?"disabled":""}>+</button>
+      <span>${r.serves===1?"person":"people"}</span>
+      ${scaled?`<span class="recipe-sub" style="margin:0">written for ${base.serves} · <button class="link" id="servesReset">Back to ${base.serves}</button></span>`:""}
+    </div>
+    ${scaled?`<p class="swapnote">Amounts are changed for ${r.serves} ${r.serves===1?"person":"people"}, in the ingredients and in the steps. Cooking times stay the same; a bigger pot may need a few extra minutes to come to a boil. Taste before adding more salt and spices.${panNote} <strong>Use your best judgment while cooking:</strong> if a pot or pan gets crowded, cook in smaller batches.</p>`:""}`;
+}
+// "+1 step · +7 min · +$0.60/serving", measured against the recipe without this add-on.
+function addonMeta(r,a){
+  const alone=applyAddons(r,[a]),parts=[];
+  const stepsAdded=alone.steps.length-r.steps.length,mins=total(alone)-total(r);
+  if(a.replace)parts.push("replaces part of the recipe");
+  if(stepsAdded)parts.push(`+${stepsAdded} step${stepsAdded>1?"s":""}`);
+  if(mins)parts.push(`${mins>0?"+":"−"}${Math.abs(mins)} min`);
+  if(a.cost)parts.push(`${a.cost>0?"+":"−"}$${Math.abs(a.cost).toFixed(2)}/serving`);
+  if(a.group)parts.push("pick one of these");
+  return parts.join(" · ");
+}
+function addonListHtml(r,locked){
+  if(!r.addons)return "";
+  const base=byId[r.id],on=settings.addons[r.id]||[];
+  return `<div style="margin:8px 0 4px">${base.addons.map(a=>`
+    <label class="addon-row"><input type="checkbox" data-addon="${a.id}" ${on.includes(a.id)?"checked":""} ${locked?"disabled":""}>
+      <span><strong>${a.label}</strong><span class="addon-meta">${[addonMeta(base,a),a.about].filter(Boolean).join(" · ")}</span></span></label>`).join("")}</div>
+    ${locked?`<p class="recipe-sub" style="margin:4px 0 8px">Your options are set once you start cooking. Press <strong>Start over</strong> at the end to change them.</p>`:""}`;
+}
+// Options can change while gathering (or, with that step turned off, before step 1 begins).
+const addonsLocked=r=>!gathering&&(settings.gatherFirst||stepIdx>0||running||phase!=="task"||secLeft!==stepMin(r,0)*60);
+function toggleAddon(r,id,on){
+  const a=r.addons.find(x=>x.id===id);
+  let ids=(settings.addons[r.id]||[]).filter(x=>x!==id);
+  if(on){
+    if(a.group)ids=ids.filter(x=>r.addons.find(y=>y.id===x).group!==a.group);
+    ids.push(id);
+  }
+  if(ids.length)settings.addons[r.id]=ids;else delete settings.addons[r.id];
+  saveSettings();
+  restartSteps();
+}
+const stepNotesHtml=st=>(st.notes||[]).map(n=>`<p class="step-choice"><strong>${n.label}:</strong> ${n.text}</p>`).join("");
+// "Make it halal or vegan" notes for the diets a recipe isn't already (after the cook's add-ons).
+const DIET_NAMES={halal:"halal",vegetarian:"vegetarian",vegan:"vegan",glutenfree:"gluten-free"};
+// Recipes that aren't a diet as written but have notes on how to make them that way.
+const canBeMade=(r,d)=>!!r.dietNotes?.[d];
+function dietNotesFor(r){
+  return Object.keys(DIET_NAMES).filter(d=>r.dietNotes?.[d]&&!r.diet.includes(d)).map(d=>[d,r.dietNotes[d]]);
+}
+function dietNotesTitle(notes){
+  const names=notes.map(([d])=>DIET_NAMES[d]);
+  return "Make it "+(names.length>1?names.slice(0,-1).join(", ")+" or "+names[names.length-1]:names[0]);
+}
+const dietNotesBody=notes=>notes.map(([d,text])=>`<p class="byo-group"><strong>${DIET_NAMES[d][0].toUpperCase()+DIET_NAMES[d].slice(1)}</strong>${text}</p>`).join("");
+function byoHtml(r){
+  if(!r.byo)return "";
+  return `${r.byo.intro?`<p class="recipe-sub" style="margin:6px 0 4px">${r.byo.intro}</p>`:""}
+    ${r.byo.ideas.map(([group,items])=>`<p class="byo-group"><strong>${group}</strong>${items}</p>`).join("")}`;
+}
+function catalogStepsHtml(r){
+  return r.steps.map((s,i)=>{
+    const time=s.by?`${Math.min(...s.mins)}–${Math.max(...s.mins)} min, depending on how you like it`
+      :s.prep?`prep ahead, ${stepPrepText(s)}`:s.timer===false?(s.min?`about ${s.min} min, no timer`:"no timer"):`${s.min} min`;
+    return `<li><strong>${s.name}</strong> (${time}): ${s.desc}</li>`;
+  }).join("");
+}
+const total=r=>r.steps.reduce((a,s,i)=>a+stepMin(r,i),0);
+// Marinating and soaking steps are prep: waiting before the cooking starts, shown apart from
+// cooking time ("49 min + overnight prep") so a recipe that needs planning ahead is obvious.
+const cookTotal=r=>r.steps.reduce((a,s,i)=>s.prep?a:a+stepMin(r,i),0);
+const prepTotal=r=>r.steps.reduce((a,s)=>s.prep?a+s.min:a,0);
+// Everything done on the day itself: cooking plus any same-day marinating, but not overnight soaks.
+const readyTotal=r=>r.steps.reduce((a,s,i)=>s.overnight?a:a+stepMin(r,i),0);
+const stepPrepText=s=>s.overnight?"overnight":fmtMin(s.min);
+const prepText=r=>r.steps.some(s=>s.prep&&s.overnight)?"overnight":fmtMin(prepTotal(r));
+const timeText=r=>cookTotal(r)||prepTotal(r)?fmtMin(cookTotal(r))+(prepTotal(r)?` + ${prepText(r)} prep`:""):"";
+function planAheadHtml(r){
+  const prep=r.steps.filter(s=>s.prep);
+  if(!prep.length)return "";
+  return `<p class="swapnote"><strong>Plan ahead:</strong> ${prep.map(s=>`${s.name.replace(/ \(the night before\)$/,"")} (${stepPrepText(s)})`).join(", ")} before you cook. This is counted as prep, not cooking time.</p>`;
+}
+function fmtMin(m){if(m<60)return m+" min";const h=Math.floor(m/60),r=m%60;return h+" hr"+(r?" "+r+" min":"")}
+function fmt(s){const m=Math.floor(s/60),ss=s%60;return `${m}:${ss.toString().padStart(2,"0")}`}
+function fmtCost(c){return "$"+c.toFixed(2)+"/serving"}
+const caloriesText=r=>r.calories?`${r.caloriesEstimated?"about ":""}${r.calories} cal/serving`:"";
+function isStaple(item){return STAPLES.includes(item.toLowerCase().trim())}
+
+/* ---------- swaps ---------- */
+// settings.swaps maps a swap id to the index of the replacement option chosen; absent means off.
+const isSwapOn=s=>Object.hasOwn(settings.swaps,s.id);
+const chosenOption=s=>s.options[settings.swaps[s.id]]||s.options[0];
+const swapFits=(s,r)=>!(s.notIn||[]).includes(r.id);
+const swapsForLine=(r,line)=>SWAPS.filter(s=>swapFits(s,r)&&s.match.test(line));
+const swapsFor=r=>SWAPS.filter(s=>swapFits(s,r)&&r.ingredients.some(line=>s.match.test(line)));
+const activeSwapsFor=r=>swapsFor(r).filter(isSwapOn);
+function effectiveCost(r){
+  if(r.cost===null)return null;
+  const saved=activeSwapsFor(r).reduce((a,s)=>a+chosenOption(s).save,0);
+  return Math.max(MIN_COST,r.cost-saved);
+}
+function costText(r){
+  if(r.cost===null)return "";
+  const c=effectiveCost(r);
+  return c<r.cost?`${fmtCost(c)} with your swaps (was $${r.cost.toFixed(2)})`:fmtCost(r.cost);
+}
+function ingredientsHtml(r,interactive){
+  return r.ingredients.map(line=>{
+    const hits=swapsForLine(r,line),off=hits.filter(s=>!isSwapOn(s));
+    const used=hits.filter(isSwapOn).map(s=>`<span class="swap-use">↳ ${s.from} → ${chosenOption(s).to}</span>`).join("");
+    const offer=interactive&&off.length?` <button class="swap-tag" data-swap="${off[0].id}" title="${off[0].from} → ${off[0].options[0].to}">Swap?</button>`:"";
+    return `<li>${line}${offer}${used}</li>`;
+  }).join("");
+}
+function swapsChanged(){
+  saveSettings();
+  renderSwapsPanel();
+  if(view==="week")renderRecipe();else if(view==="shop")renderShop();else renderList();
+}
+function turnSwapOn(s,optionIdx){settings.swaps[s.id]=optionIdx??settings.swaps[s.id]??0}
+function setSwap(id,on,optionIdx){
+  const s=SWAPS.find(x=>x.id===id);
+  if(on)turnSwapOn(s,optionIdx);else delete settings.swaps[id];
+  swapsChanged();
+}
+function setCategory(catId,on){
+  SWAPS.filter(s=>s.cat===catId).forEach(s=>{if(on)turnSwapOn(s);else delete settings.swaps[s.id]});
+  swapsChanged();
+}
+function bindSwapControls(root){
+  root.querySelectorAll("input[data-swap]").forEach(c=>c.onchange=()=>setSwap(c.dataset.swap,c.checked));
+  root.querySelectorAll("select[data-swap]").forEach(sel=>sel.onchange=()=>setSwap(sel.dataset.swap,true,+sel.value));
+  root.querySelectorAll("button[data-swap]").forEach(b=>b.onclick=()=>setSwap(b.dataset.swap,true));
+}
+function saveText(save){return save>=0.1?`saves about $${save.toFixed(2)}/serving`:"saves a little"}
+function swapRowHtml(s,extra){
+  const pick=chosenOption(s);
+  const choice=s.options.length>1
+    ?`<select data-swap="${s.id}" aria-label="Replacement for ${s.from}">${s.options.map((o,i)=>`<option value="${i}" ${o===pick?"selected":""}>${o.to}</option>`).join("")}</select>`
+    :`<span>${pick.to}</span>`;
+  return `<div class="swap-row">
+    <label><input type="checkbox" data-swap="${s.id}" ${isSwapOn(s)?"checked":""}> <strong>${s.from}</strong> →</label>
+    ${choice}
+    <span class="swap-meta">${saveText(pick.save)} · ${SWAP_KINDS[s.kind]}${extra?" · "+extra:""}</span>
+  </div>`;
+}
+const cur=()=>withAddons(byId[planArr()[dayIdx]]);
+const $=id=>document.getElementById(id);
+
+/* ---------- sound ---------- */
+let actx=null;
+function unlockAudio(){try{if(!actx){const C=window.AudioContext||window.webkitAudioContext;if(C)actx=new C()}if(actx&&actx.state==="suspended")actx.resume()}catch(e){}}
+// A single low, soft tone for check-ins, gentler than the time's-up beep.
+function softChime(){try{if(!actx)return;const o=actx.createOscillator(),g=actx.createGain(),s=actx.currentTime;o.frequency.value=523;g.gain.setValueAtTime(.001,s);g.gain.exponentialRampToValueAtTime(.12,s+.05);g.gain.exponentialRampToValueAtTime(.001,s+1.2);o.connect(g).connect(actx.destination);o.start(s);o.stop(s+1.3)}catch(e){}}
+function beep(){try{if(!actx)return;[0,.35,.7].forEach(t=>{const o=actx.createOscillator(),g=actx.createGain(),s=actx.currentTime+t;o.frequency.value=880;g.gain.setValueAtTime(.001,s);g.gain.exponentialRampToValueAtTime(.25,s+.02);g.gain.exponentialRampToValueAtTime(.001,s+.25);o.connect(g).connect(actx.destination);o.start(s);o.stop(s+.3)})}catch(e){}}
+
+/* ---------- read aloud ---------- */
+const canSpeak="speechSynthesis" in window&&"SpeechSynthesisUtterance" in window;
+/* Voices come from the browser and device. Natural/neural voices (Edge, newer Apple devices)
+   and Google voices (Chrome) are far clearer than robotic ones like eSpeak, so they rank first. */
+const VOICE_QUALITY=[[/natural|neural|online/i,4],[/google/i,3],[/siri|enhanced|premium|samantha|daniel|karen/i,2],[/espeak|mbrola/i,-3]];
+function voiceScore(v){
+  const score=VOICE_QUALITY.reduce((a,[pattern,points])=>pattern.test(v.name)?a+points:a,0);
+  return score+(/^en-US/i.test(v.lang)?1:0);
+}
+let englishVoices=[];
+function loadVoices(){
+  englishVoices=speechSynthesis.getVoices().filter(v=>/^en(-|_|$)/i.test(v.lang))
+    .sort((a,b)=>voiceScore(b)-voiceScore(a)||a.name.localeCompare(b.name));
+  renderVoiceOptions();
+}
+const chosenVoice=()=>englishVoices.find(v=>v.voiceURI===settings.voice)||englishVoices[0]||null;
+function renderVoiceOptions(){
+  const sel=$("voiceSel"),best=englishVoices[0];
+  // Built with Option() rather than HTML, since voice names come from the device.
+  sel.replaceChildren(new Option(best?`Clearest available (${best.name})`:"Clearest available",""),
+    ...englishVoices.map(v=>new Option(v.name,v.voiceURI)));
+  sel.value=englishVoices.some(v=>v.voiceURI===settings.voice)?settings.voice:"";
+}
+// Chrome's Google voices go silent partway through long text, so each sentence is queued separately.
+function speak(text){
+  if(!canSpeak)return;
+  text=text.replace(/<br>/g,". ").replace(/&(amp|lt|gt|quot|#39);/g,m=>({"&amp;":"&","&lt;":"<","&gt;":">","&quot;":'"',"&#39;":"'"})[m]);
+  speechSynthesis.cancel();
+  const voice=chosenVoice();
+  for(const sentence of text.split(/(?<=[.!?])\s+/)){
+    const u=new SpeechSynthesisUtterance(sentence);
+    u.rate=settings.speechRate;
+    if(voice){u.voice=voice;u.lang=voice.lang}
+    speechSynthesis.speak(u);
+  }
+}
+function stopSpeaking(){if(canSpeak)speechSynthesis.cancel()}
+const stepSpeech=(r,i)=>`Step ${i+1} of ${r.steps.length}. ${r.steps[i].name}. ${r.steps[i].desc} ${(r.steps[i].notes||[]).map(n=>`${n.label}: ${n.text}`).join(" ")}`;
+const readButtonHtml=(id,label)=>canSpeak?`<button class="btn secondary" id="${id}">🔊 ${label}</button>`:"";
+
+/* ---------- views ---------- */
+function setView(v){
+  view=v;
+  $("tabWeek").setAttribute("aria-selected",v==="week");
+  $("tabCat").setAttribute("aria-selected",v==="cat");
+  $("tabShop").setAttribute("aria-selected",v==="shop");
+  $("tabMine").setAttribute("aria-selected",v==="mine");
+  $("weekView").hidden=v!=="week";
+  $("side").hidden=v!=="week";
+  $("catView").hidden=v!=="cat";
+  $("shopView").hidden=v!=="shop";
+  $("mineView").hidden=v!=="mine";
+  if(v==="cat"){cat.day=dayIdx;renderCatalog()}
+  else if(v==="shop")renderShop();
+  else if(v==="mine")renderMine();
+  else{renderRecipe();renderChecklist()}
+}
+$("tabWeek").onclick=()=>setView("week");
+$("tabCat").onclick=()=>setView("cat");
+$("tabShop").onclick=()=>setView("shop");
+$("tabMine").onclick=()=>setView("mine");
+
+/* ---------- settings ---------- */
+$("skipTimersChk").checked=settings.skipTimers;
+$("cheapModeChk").checked=settings.cheapMode;
+function bindPanelToggle(btnId,panelId){
+  $(btnId).onclick=()=>{
+    const panel=$(panelId),open=panel.hidden;
+    panel.hidden=!open;
+    $(btnId).setAttribute("aria-expanded",String(open));
+  };
+}
+bindPanelToggle("settingsBtn","settingsPanel");
+bindPanelToggle("swapsBtn","swapsPanel");
+const openSwapCategories=new Set();
+function renderSwapsPanel(){
+  const el=$("swapsPanel");
+  const n=Object.keys(settings.swaps).length;
+  el.innerHTML=`
+    <h3 style="margin:0 0 4px;font-size:14px">Ingredient swaps</h3>
+    <p class="recipe-sub" style="margin-bottom:12px">Turn on a whole category, or open it to pick swaps one by one and choose what to use instead. Swaps show up under the ingredient in every recipe that uses it, and lower the cost estimate. ${n?`<strong>${n} on.</strong>`:"None on yet."}</p>
+    ${SWAP_CATEGORIES.map(([catId,label])=>{
+      const list=SWAPS.filter(s=>s.cat===catId),on=list.filter(isSwapOn).length;
+      return `<div class="swap-cat">
+        <div class="swap-cat-head">
+          <label><input type="checkbox" data-cat="${catId}" ${on===list.length?"checked":""}> <span><strong>${label}</strong>: use all</span></label>
+          <span class="swap-meta">${on} of ${list.length} on</span>
+        </div>
+        <details data-cat-box="${catId}" ${openSwapCategories.has(catId)?"open":""}>
+          <summary>Choose ${label.toLowerCase()} swaps</summary>
+          ${list.map(s=>{
+            const used=RECIPES.filter(r=>swapsFor(r).includes(s)).length;
+            return swapRowHtml(s,`in ${used} ${used===1?"recipe":"recipes"}`);
+          }).join("")}
+        </details>
+      </div>`;
+    }).join("")}`;
+  el.querySelectorAll("input[data-cat]").forEach(c=>{
+    const list=SWAPS.filter(s=>s.cat===c.dataset.cat),on=list.filter(isSwapOn).length;
+    c.indeterminate=on>0&&on<list.length;
+    c.onchange=()=>setCategory(c.dataset.cat,c.checked);
+  });
+  el.querySelectorAll("details[data-cat-box]").forEach(d=>d.querySelector("summary").onclick=()=>{
+    const catId=d.dataset.catBox;
+    if(d.open)openSwapCategories.delete(catId);else openSwapCategories.add(catId);
+  });
+  bindSwapControls(el);
+}
+$("skipTimersChk").onchange=e=>{
+  settings.skipTimers=e.target.checked;saveSettings();
+  clearInterval(timerId);running=false;phase="task";
+  const r=cur();if(stepIdx<r.steps.length)secLeft=stepMin(r,stepIdx)*60;
+  startStep();renderRecipe();
+};
+/* Screen wake lock: browsers drop it whenever the tab is hidden, so it is re-requested
+   each time the page becomes visible again. */
+let wakeLock=null;
+$("keepAwakeChk").checked=settings.keepAwake;
+async function updateWakeLock(){
+  const note=$("keepAwakeNote");
+  if(!("wakeLock" in navigator)){
+    note.textContent="This browser can't keep the screen on. Try a recent Chrome, Edge, Safari, or Firefox.";
+    note.hidden=!settings.keepAwake;
+    return;
+  }
+  note.hidden=true;
+  if(settings.keepAwake&&document.visibilityState==="visible"){
+    if(wakeLock&&!wakeLock.released)return;
+    try{wakeLock=await navigator.wakeLock.request("screen")}
+    catch(e){note.textContent="The screen couldn't be kept on right now (low battery mode can block it).";note.hidden=false}
+  }else if(wakeLock){
+    await wakeLock.release().catch(()=>{});
+    wakeLock=null;
+  }
+}
+document.addEventListener("visibilitychange",updateWakeLock);
+$("keepAwakeChk").onchange=e=>{settings.keepAwake=e.target.checked;saveSettings();updateWakeLock()};
+/* ---------- accessibility ---------- */
+/* [accent, ok] colors for each color mode. Red-green mode uses orange vs blue (the Okabe–Ito
+   colorblind-safe pair); blue-yellow mode uses red vs teal. HC variants are for high contrast. */
+const MODE_COLORS={
+  default:{light:["#c0603a","#4f804f"],dark:["#e07b53","#86b886"],lightHC:["#9a3f1c","#2e5e2e"],darkHC:["#ff9a70","#a8e0a8"]},
+  rg:{light:["#b34f00","#0072b2"],dark:["#f0a050","#56b4e9"],lightHC:["#8a3d00","#004f80"],darkHC:["#ffb870","#8fd0ff"]},
+  by:{light:["#c0283c","#00756f"],dark:["#f06878","#4fc3b0"],lightHC:["#9c1b2e","#00544d"],darkHC:["#ff8a95","#7fe0d0"]}
+};
+const HIGH_CONTRAST={
+  light:{"--bg":"#fff","--card":"#fff","--text":"#000","--muted":"#333","--line":"#666","--soft":"#e6e6e6","--note":"#fde3cc"},
+  dark:{"--bg":"#000","--card":"#111","--text":"#fff","--muted":"#ddd","--line":"#888","--soft":"#2a2a2a","--note":"#3d2a18"}
+};
+const darkQuery=matchMedia("(prefers-color-scheme: dark)");
+function applyLook(){
+  const root=document.documentElement;
+  const theme=settings.theme==="system"?(darkQuery.matches?"dark":"light"):settings.theme;
+  root.dataset.theme=theme;
+  root.dataset.text=settings.textSize;
+  root.toggleAttribute("data-contrast",settings.highContrast);
+  root.toggleAttribute("data-readable",settings.readableFont);
+  root.toggleAttribute("data-reduce-motion",settings.reduceMotion);
+  Object.keys(HIGH_CONTRAST.light).forEach(k=>root.style.removeProperty(k));
+  const [accent,ok]=MODE_COLORS[settings.colorMode][theme+(settings.highContrast?"HC":"")];
+  const vars={...(settings.highContrast?HIGH_CONTRAST[theme]:{}),"--accent":accent,"--ok":ok};
+  for(const [k,v] of Object.entries(vars))root.style.setProperty(k,v);
+}
+darkQuery.addEventListener("change",applyLook);
+const optionsHtml=choices=>Object.entries(choices).map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
+$("textSizeSel").innerHTML=optionsHtml(TEXT_SIZES);
+$("themeSel").innerHTML=optionsHtml(THEMES);
+$("colorModeSel").innerHTML=optionsHtml(COLOR_MODES);
+$("speechRateSel").innerHTML=optionsHtml(SPEECH_RATES);
+function bindLookControl(id,key){
+  const el=$(id),isBox=el.type==="checkbox";
+  if(isBox)el.checked=settings[key];else el.value=String(settings[key]);
+  el.onchange=()=>{
+    settings[key]=isBox?el.checked:typeof DEFAULT_SETTINGS[key]==="number"?+el.value:el.value;
+    saveSettings();applyLook();
+  };
+}
+bindLookControl("textSizeSel","textSize");
+bindLookControl("themeSel","theme");
+bindLookControl("colorModeSel","colorMode");
+bindLookControl("highContrastChk","highContrast");
+bindLookControl("readableFontChk","readableFont");
+bindLookControl("reduceMotionChk","reduceMotion");
+bindLookControl("autoReadChk","autoRead");
+bindLookControl("speechRateSel","speechRate");
+const VOICE_SAMPLE="This is how recipe steps will sound.";
+$("testVoiceBtn").onclick=()=>speak(VOICE_SAMPLE);
+if(canSpeak){
+  loadVoices();
+  speechSynthesis.addEventListener("voiceschanged",loadVoices);
+  $("voiceSel").onchange=e=>{settings.voice=e.target.value;saveSettings();speak(VOICE_SAMPLE)};
+}else{
+  ["voiceSel","autoReadChk","speechRateSel","testVoiceBtn"].forEach(id=>$(id).disabled=true);
+  $("speechNote").textContent="This browser can't read text aloud. Try a recent Chrome, Edge, Safari, or Firefox.";
+}
+applyLook();
+
+$("checkInChk").checked=settings.checkIn;
+$("checkInChk").onchange=e=>{settings.checkIn=e.target.checked;saveSettings();startStep();renderRecipe()};
+$("gatherFirstChk").checked=settings.gatherFirst;
+// Turning it off skips the checklist right away; turning it on applies the next time a recipe starts.
+$("gatherFirstChk").onchange=e=>{
+  settings.gatherFirst=e.target.checked;saveSettings();
+  if(!settings.gatherFirst&&gathering){gathering=false;startStep()}
+  renderRecipe();renderChecklist();
+};
+// The recipe being cooked only starts over if cheap mode actually changes today's recipe.
+$("cheapModeChk").onchange=e=>{
+  const before=planArr()[dayIdx];
+  settings.cheapMode=e.target.checked;saveSettings();
+  if(planArr()[dayIdx]!==before)initDay(dayIdx);else{renderDays();renderRecipe()}
+  if(view==="shop")renderShop();else if(view==="cat")renderList();
+};
+
+/* ---------- gather everything first ---------- */
+// Tools a recipe needs, found from words in its steps and ingredients. Each group lists its most
+// specific wording first and only the first match is used, so "large pot" beats plain "pot".
+const TOOL_GROUPS=[
+ [[/dutch oven|caldero|donabe|heavy pot/,"Large heavy pot (Dutch oven)"],[/(large|big|deep|very large) pot|stockpot/,"Large pot"],[/(small|medium) pot|saucepan/,"Small or medium pot"],[/\bpot\b/,"Pot"]],
+ [[/\bwok\b/,"Wok or large skillet"],[/cast[- ]iron/,"Cast-iron skillet"],[/paella pan/,"Paella pan or your widest skillet"],[/nonstick (skillet|pan)/,"Nonstick skillet"],[/(large|wide|deep) skillet/,"Large skillet"],[/skillet|frying pan/,"Skillet"],
+  [/(?<!sheet |loaf |grill |roasting |paella |baking |sauce)\bpan\b/,"Pan or skillet"]],
+ [[/\d+ cm \([^)]*\) (of )?oil/,"Deep pot or pan for frying"]],
+ [[/sheet pan|baking sheet/,"Sheet pan"]],
+ [[/baking dish|casserole dish|9 × 13|8 × 8/,"Baking dish"]],
+ [[/loaf pan/,"Loaf pan"]],
+ [[/roasting pan/,"Roasting pan"]],
+ [[/grill pan|\bgrill\b/,"Grill or grill pan"]],
+ [[/wire rack|\brack\b(?! in)/,"Wire rack"]],
+ [[/food processor/,"Food processor"],[/stick blender/,"Blender or stick blender"],[/\bblend/,"Blender"]],
+ [[/microwave/,"Microwave"]],
+ [[/thermometer|oil (to|at) \d+°f/,"Kitchen thermometer (helpful)"]],
+ [[/colander|sieve|strain|\bdrain(?! on)/,"Colander or strainer"]],
+ [[/\bgrate|grater/,"Grater"]],
+ [[/\bpeeled\b/,"Vegetable peeler"]],
+ [[/\bchop|\bdice|\bslice|\bmince|\bcut\b|\bhalve/,"Cutting board and sharp knife"]],
+ [[/\bbowl\b/,"Mixing bowl"]],
+ [[/\bwhisk/,"Whisk (or a fork)"]],
+ [[/\btongs\b/,"Tongs"],[/spatula/,"Spatula"]],
+ [[/rolling pin|\broll (it |the dough |each piece )?(out|thin)|\broll the dough/,"Rolling pin"]],
+ [[/skewer/,"Skewers"]],
+ [[/parchment/,"Parchment paper"]],
+ [[/\bfoil\b/,"Aluminum foil"]],
+ [[/paper towel/,"Paper towels"]],
+ [[/\b(tbsp|tsp|cups?)\b/,"Measuring cups and spoons"]]
+];
+function toolsFor(r){
+  const text=[...r.ingredients,...r.steps.map(s=>s.desc)].join(" ").toLowerCase();
+  const tools=[];
+  const oven=text.match(/oven to (\d+°f) \((\d+°c)\)/);
+  if(oven)tools.push(`Oven (set to ${oven[1].toUpperCase()} / ${oven[2].toUpperCase()})`);
+  else if(/\boven\b|broil/.test(text))tools.push("Oven or broiler");
+  for(const group of TOOL_GROUPS){
+    const hit=group.find(([re])=>re.test(text));
+    if(hit)tools.push(hit[1]);
+  }
+  return tools;
+}
+let gathering=false,gathered=new Set();
+function gatherRowHtml(key,text,extra){
+  return `<label class="gather-row ${gathered.has(key)?"got":""}"><input type="checkbox" data-gather="${encodeURIComponent(key)}" ${gathered.has(key)?"checked":""}><span>${text}${extra}</span></label>`;
+}
+function gatherHtml(r){
+  // Keyed by text, so ticks survive picking an add-on that changes the list.
+  const tools=toolsFor(r),keys=[...r.ingredients.map(l=>"i:"+l),...tools.map(t=>"t:"+t)];
+  const ready=keys.filter(k=>gathered.has(k)).length,count=keys.length,missing=count-ready;
+  const swapNotes=line=>swapsForLine(r,line).filter(isSwapOn).map(s=>`<span class="swap-use">↳ ${s.from} → ${chosenOption(s).to}</span>`).join("");
+  return `
+    <div class="progress"><span>${r.steps.length?"Before step 1 · no timer":"No steps, just the ingredients"}</span><span>${ready} of ${count} ready</span></div>
+    <div class="step-box">
+      <div class="step-name">Get everything out</div>
+      <p class="step-desc">Set each thing on the counter and tick it off, so nothing is missing halfway through.</p>
+      <h4 class="gather-head">Ingredients</h4>
+      ${r.ingredients.map(line=>gatherRowHtml("i:"+line,line,swapNotes(line))).join("")}
+      ${tools.length?`<h4 class="gather-head">Tools</h4>${tools.map(t=>gatherRowHtml("t:"+t,t,"")).join("")}`:""}
+      <div class="controls" style="margin-top:14px">
+        <button class="btn" id="gatherDoneBtn">${!r.steps.length?(missing?`Done (${missing} not ticked)`:"Done"):missing?`Start anyway (${missing} not ticked)`:"Ready, start cooking"}</button>
+        ${readButtonHtml("readGatherBtn","Read list")}
+      </div>
+    </div>`;
+}
+function bindGather(r){
+  $("recipeCard").querySelectorAll("input[data-gather]").forEach(c=>c.onchange=()=>{
+    const key=decodeURIComponent(c.dataset.gather);
+    if(c.checked)gathered.add(key);else gathered.delete(key);
+    renderRecipe();
+  });
+  $("gatherDoneBtn").onclick=()=>{
+    unlockAudio();gathering=false;startStep();renderRecipe();renderChecklist();
+    if(settings.autoRead)speak(stepSpeech(r,0));
+  };
+  if(canSpeak)$("readGatherBtn").onclick=()=>speak(`Get everything out for ${r.title}. Ingredients: ${r.ingredients.join(". ")}. Tools: ${toolsFor(r).join(". ")}.`);
+}
+
+/* ---------- check-ins and quick timers ---------- */
+// Steps without a countdown can still be forgotten. If one runs 2 minutes past its estimate,
+// play a soft chime and ask whether the cook is still on it, then again every 5 minutes.
+let stepStartedAt=0,checkInId=null,checkIns=0;
+const stepUntimed=(r,i)=>settings.skipTimers||r.steps[i].timer===false;
+function startStep(){
+  clearInterval(checkInId);checkIns=0;stepStartedAt=Date.now();
+  stopQuickTimer();
+  const r=cur();
+  if(settings.checkIn&&!gathering&&stepIdx<r.steps.length&&stepUntimed(r,stepIdx)&&stepMin(r,stepIdx))checkInId=setInterval(checkInTick,5000);
+}
+function checkInTick(){
+  const r=cur(),over=(Date.now()-stepStartedAt)/1000-stepMin(r,stepIdx)*60;
+  if(over<120+checkIns*300)return;
+  checkIns++;softChime();renderRecipe();
+  if(settings.autoRead)speak(`Still on ${r.steps[stepIdx].name}? Press Mark done when you're finished.`);
+}
+const checkInHtml=r=>checkIns?`<p class="checkin-note" role="status">Still on this step? It usually takes about ${stepMin(r,stepIdx)} min. Tap <strong>Mark done</strong> when you're finished, or take your time.</p>`:"";
+
+// Short timers for times a step repeats, like "3 min per side" or frying "in batches ... 4–5 min".
+// Ranges use the shorter time, so the cook checks before anything burns.
+function quickTimesFor(st){
+  const found=new Map();
+  const add=(n,unit,what)=>{const sec=/^s/.test(unit)?+n:+n*60;if(sec>=30&&!found.has(sec+what))found.set(sec+what,{sec,what})};
+  for(const m of st.desc.matchAll(/(\d+)(?:\s*[–-]\s*\d+)?\s*(min|minutes|seconds?)\s+(?:each\s+)?(?:per|a|each) (side|batch)/g))add(m[1],m[2],"per "+m[3]);
+  if(!found.size&&/in batches|at a time|in two batches|per batch/i.test(st.desc)){
+    const m=st.desc.match(/(\d+)(?:\s*[–-]\s*\d+)?\s*(min|minutes|seconds?)\b/);
+    if(m)add(m[1],m[2],"per batch");
+  }
+  return [...found.values()];
+}
+let quick={left:0,endsAt:0,id:null,done:false};
+function stopQuickTimer(){clearInterval(quick.id);quick={left:0,endsAt:0,id:null,done:false}}
+function quickTimerHtml(st){
+  const times=quickTimesFor(st);
+  if(!times.length)return "";
+  const label=t=>t.sec<60?`${t.sec} sec`:`${t.sec/60} min`;
+  if(quick.id)return `<span class="quick-timer" aria-live="off">⏱ <span id="quickDisp">${fmt(quick.left)}</span><button class="btn secondary" id="quickStopBtn">Stop</button></span>`;
+  return (quick.done?`<span class="quick-timer" role="status">⏱ Check it now</span>`:"")
+    +times.map(t=>`<button class="btn secondary" data-quick="${t.sec}">⏱ ${label(t)} ${t.what}</button>`).join("");
+}
+function quickTick(){
+  quick.left=secondsUntil(quick.endsAt);
+  if(quick.left<=0){clearInterval(quick.id);quick={left:0,endsAt:0,id:null,done:true};beep();renderRecipe();return}
+  const d=$("quickDisp");if(d)d.textContent=fmt(quick.left);
+}
+// Coming back to the tab shows the right time straight away instead of on the next tick.
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState!=="visible")return;
+  if(running)tick();
+  if(quick.id)quickTick();
+});
+function bindQuickTimer(){
+  $("recipeCard").querySelectorAll("button[data-quick]").forEach(b=>b.onclick=()=>{
+    unlockAudio();stopQuickTimer();
+    quick.left=+b.dataset.quick;
+    quick.endsAt=Date.now()+quick.left*1000;
+    quick.id=setInterval(quickTick,1000);
+    renderRecipe();
+  });
+  const stop=$("quickStopBtn");if(stop)stop.onclick=()=>{stopQuickTimer();renderRecipe()};
+}
+
+// The last screen reminds the cook to switch off what this recipe used and tidy up.
+function wrapUpText(r){
+  const text=r.steps.map(s=>s.desc).join(" ").toLowerCase();
+  const heat=[];
+  if(/skillet|grill pan|dry pan|\bpot\b|\bwok\b|\bfry|fried|sauté|\bsear|boil|simmer|stove|burner|(low|medium|high)(-\w+)? heat|oil to \d/.test(text))heat.push("the stove");
+  if(/\boven\b|broil/.test(text))heat.push("the oven");
+  const off=heat.length?`turn off ${heat.join(" and ")}, `:"";
+  return `You did it! Before you sit down, ${off}put ingredients back in the fridge or pantry, and set your dishes and tools aside to wash. Enjoy your meal!`;
+}
+
+/* ---------- week ---------- */
+function initDay(i){
+  stopSpeaking();
+  dayIdx=i;stepIdx=0;phase="task";running=false;clearInterval(timerId);
+  openPanels={ingr:null,swaps:false,byo:null,diet:false};
+  gathering=settings.gatherFirst;gathered=new Set();
+  restartSteps();
+}
+// Back to step 1 (keeping the gather checklist as it is), e.g. after picking an add-on.
+function restartSteps(){
+  const r=cur();
+  stepIdx=0;phase="task";running=false;clearInterval(timerId);
+  stepStatus=r.steps.map(()=>"pending");stepStatus[0]="current";
+  secLeft=stepMin(r,0)*60;
+  startStep();
+  renderDays();renderRecipe();renderChecklist();
+}
+function renderDays(){
+  const el=$("days");el.innerHTML="";
+  const plan=planArr();
+  DAYS.forEach((d,i)=>{
+    const r=withAddons(byId[plan[i]]),b=document.createElement("button");
+    b.innerHTML=`<span class="d">${d}</span><span class="t">${cookTotal(r)?fmtMin(cookTotal(r)):"—"}</span>${prepTotal(r)?`<span class="t">+ ${prepText(r)} prep</span>`:""}`;
+    b.className=(i===dayIdx?"active ":"")+(i===TODAY?"today":"");
+    b.title=`${DAY_NAMES[i]}${i===TODAY?" (today)":""}: ${plainText(r.title)}`;
+    b.onclick=()=>initDay(i);el.appendChild(b);
+  });
+}
+// Overnight soaks are done the night before, so they never count toward "ready around".
+function secondsLeft(){
+  const r=cur();if(stepIdx>=r.steps.length)return 0;
+  let s=phase==="task"&&!r.steps[stepIdx].overnight?secLeft:0;
+  for(let i=stepIdx+1;i<r.steps.length;i++)if(!r.steps[i].overnight)s+=stepMin(r,i)*60;
+  return s;
+}
+const progressPct=()=>Math.round(100*(1-secondsLeft()/(readyTotal(cur())*60)));
+function progressText(){
+  if(!readyTotal(cur()))return "";
+  const left=fmtMin(Math.ceil(secondsLeft()/60));
+  if(cur().steps[stepIdx].overnight)return `Then about ${left} of cooking`;
+  const ready=new Date(Date.now()+secondsLeft()*1000).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
+  return `About ${left} left · ready around ${ready}`;
+}
+function renderRecipe(){
+  if(view!=="week")return;
+  const r=cur(),card=$("recipeCard");
+  const swapped=overrides[dayIdx]!==undefined;
+  const available=swapsFor(r);
+  const head=`
+    <div class="rhead">
+      <div><h2 class="recipe-title">${r.title}</h2>
+      <p class="recipe-sub">${[DAY_NAMES[dayIdx],r.cuisine,mealTypeText(r),timeText(r),`serves ${r.serves}`,r.steps.length?`${r.steps.length} steps`:"no steps",costText(r),caloriesText(r)].filter(Boolean).join(" · ")}</p>
+      ${dietLabelsHtml(r)?`<div class="labels">${dietLabelsHtml(r)}</div>`:""}</div>
+      <div class="controls">${favButtonHtml(r)}${r.mine?`<button class="btn secondary" data-edit="${r.id}">Edit recipe</button>`:""}<button class="btn secondary" id="swapBtn">Pick a different recipe</button></div>
+    </div>
+    ${r.desc?`<p class="dish-desc">${r.desc}</p>`:""}
+    ${planAheadHtml(r)}
+    ${r.safety?safetyNoteHtml(r.safety,"recipe-safety"):""}
+    ${needsHalalMeat(r)?`<p class="halal-note">Halal-friendly: no pork or alcohol. Use halal-certified meat to keep it halal.</p>`:""}
+    ${r.diet.includes("glutenfree")?`<p class="halal-note">Gluten-free as written. If you avoid gluten strictly, check the labels on broth, sauces, and spice blends, since some contain wheat.</p>`:""}
+    ${swapped?`<p class="swapnote">You swapped this in for ${DAY_NAMES[dayIdx]}. <button class="link" id="restoreBtn">Go back to ${byId[basePlan()[dayIdx]].title}</button></p>`:""}
+    ${servingsHtml(r)}
+    <details class="ingr" id="ingrBox" ${(openPanels.ingr??(!gathering&&stepIdx===0&&phase==="task"&&secLeft===stepMin(r,0)*60))?"open":""}>
+      <summary>Ingredients (${r.ingredients.length})</summary>
+      <ul>${ingredientsHtml(r,true)}</ul>
+      ${readButtonHtml("readIngrBtn","Read ingredients")}
+    </details>
+    ${r.byo?`<details class="ingr" id="byoBox" ${(openPanels.byo??stepIdx===0)?"open":""}>
+      <summary>Make it your own${pickedAddons(r).length?` (${pickedAddons(r).length} picked)`:""}</summary>
+      ${addonListHtml(r,addonsLocked(r))}
+      ${r.addons&&(r.byo.intro||r.byo.ideas.length)?`<p class="byo-group"><strong>More ideas</strong></p>`:""}
+      ${byoHtml(r)}
+    </details>`:""}
+    ${dietNotesFor(r).length?`<details class="ingr" id="dietBox" ${openPanels.diet?"open":""}>
+      <summary>${dietNotesTitle(dietNotesFor(r))}</summary>
+      <p class="recipe-sub" style="margin:6px 0 0">Everyday substitutions. They aren't part of the Swaps list, so the ingredient list and timers stay as written.</p>
+      ${dietNotesBody(dietNotesFor(r))}
+    </details>`:""}
+    ${chooseBoxHtml(r)}
+    ${available.length?`<details class="ingr" id="swapsBox" ${openPanels.swaps?"open":""}>
+      <summary>Swaps for this recipe (${activeSwapsFor(r).length} of ${available.length} on)</summary>
+      <p class="recipe-sub" style="margin:6px 0 10px">Checking a swap turns it on for every recipe.</p>
+      ${available.map(s=>swapRowHtml(s)).join("")}
+    </details>`:""}`;
+  if(gathering){
+    card.innerHTML=head+gatherHtml(r);
+    bindGather(r);
+  }else if(stepIdx>=r.steps.length){
+    card.innerHTML=head+(r.steps.length?`<p class="done-label">All steps done.</p><p class="done-note">${wrapUpText(r)}</p>`
+      :`<p class="done-label">This recipe is just an ingredient list.</p><p class="done-note">Cook it your way. When you're done, put ingredients away and set your dishes aside to wash. Enjoy your meal!</p>`)
+      +`<button class="btn" id="againBtn">Start over</button>`;
+    $("againBtn").onclick=()=>initDay(dayIdx);
+  }else{
+    const st=r.steps[stepIdx];
+    // Hands-on steps (chopping, building, quick stovetop work) have no countdown, only an estimate.
+    if(settings.skipTimers||st.timer===false){
+      card.innerHTML=head+`
+        <div class="progress"><span>Step ${stepIdx+1} of ${r.steps.length} · ${st.prep?`prep ahead · ${stepPrepText(st)}`:stepMin(r,stepIdx)?`about ${stepMin(r,stepIdx)} min${settings.skipTimers?"":" · no timer needed"}`:"no timer"}</span>${settings.skipTimers?"":`<span id="leftTxt">${progressText()}</span>`}</div>
+        <div class="step-box">
+          ${st.addon?`<span class="addon-step">Your option: ${st.addon}</span>`:""}
+          ${st.prep?`<span class="addon-step">Prep ahead${st.overnight?": the night before":""}</span>`:""}
+          <div class="step-name">${st.name}</div>
+          <p class="step-desc">${st.desc}</p>
+          ${st.by?`<p class="step-choice">${stepChoiceText(r,st)} (${stepMin(r,stepIdx)} min). Change it above.</p>`:""}
+          ${stepNotesHtml(st)}
+          ${checkInHtml(r)}
+          <div class="controls"><button class="btn" id="skipBtn">Mark done, next step</button>${quickTimerHtml(st)}${readButtonHtml("readStepBtn","Read step")}</div>
+        </div>`;
+      $("skipBtn").onclick=completeStep;
+    }else{
+      card.innerHTML=head+`
+        <div class="progress"><span>Step ${stepIdx+1} of ${r.steps.length} · ${st.prep?"prep ahead · ":""}${stepMin(r,stepIdx)} min</span><span id="leftTxt">${progressText()}</span></div>
+        <div class="bar"><span id="barFill" style="width:${progressPct()}%"></span></div>
+        <div class="step-box">
+          ${st.addon?`<span class="addon-step">Your option: ${st.addon}</span>`:""}
+          ${st.prep?`<span class="addon-step">Prep ahead${st.overnight?": the night before":""}</span>`:""}
+          <div class="step-name">${st.name}</div>
+          <p class="step-desc">${st.desc}</p>
+          ${st.by?`<p class="step-choice">${stepChoiceText(r,st)} (${stepMin(r,stepIdx)} min). Change it above.</p>`:""}
+          ${stepNotesHtml(st)}
+          <div class="timer ${phase==="grace"?"grace":""}" id="timerDisp" aria-live="off">${fmt(secLeft)}</div>
+          ${phase==="grace"?`<p class="grace-note">Time's up. Take up to 2 more minutes if you need them, then press Done. The next step starts on its own when this runs out.</p>`:""}
+          <div class="controls">
+            <button class="btn" id="startBtn">${running?"Pause":(secLeft===stepMin(r,stepIdx)*60&&phase==="task"?"Start timer":"Resume")}</button>
+            <button class="btn secondary" id="skipBtn">Done, next step</button>
+            <button class="btn secondary" id="resetBtn">Reset timer</button>
+            ${quickTimerHtml(st)}
+            ${readButtonHtml("readStepBtn","Read step")}
+          </div>
+        </div>`;
+      $("startBtn").onclick=toggleRun;
+      $("skipBtn").onclick=completeStep;
+      $("resetBtn").onclick=resetTimer;
+    }
+  }
+  $("swapBtn").onclick=()=>setView("cat");
+  if(canSpeak){
+    $("readIngrBtn").onclick=()=>speak(`Ingredients for ${r.title}. ${r.ingredients.join(". ")}`);
+    if(!gathering&&stepIdx<r.steps.length)$("readStepBtn").onclick=()=>speak(stepSpeech(r,stepIdx));
+  }
+  bindFavButtons(card,renderRecipe);
+  bindEditButtons(card);
+  const serves=$("servesInput");
+  serves.onchange=()=>{if(+serves.value>=1&&+serves.value<=MAX_SERVINGS)setServings(byId[r.id],+serves.value);else serves.value=r.serves};
+  $("servesLess").onclick=()=>setServings(byId[r.id],r.serves-1);
+  $("servesMore").onclick=()=>setServings(byId[r.id],r.serves+1);
+  if($("servesReset"))$("servesReset").onclick=()=>setServings(byId[r.id],byId[r.id].serves);
+  // Remember only clicks: browsers also fire "toggle" when a details renders already open.
+  $("ingrBox").querySelector("summary").onclick=()=>{openPanels.ingr=!$("ingrBox").open};
+  if(available.length)$("swapsBox").querySelector("summary").onclick=()=>{openPanels.swaps=!$("swapsBox").open};
+  if(r.byo)$("byoBox").querySelector("summary").onclick=()=>{openPanels.byo=!$("byoBox").open};
+  if(dietNotesFor(r).length)$("dietBox").querySelector("summary").onclick=()=>{openPanels.diet=!$("dietBox").open};
+  if(!gathering&&stepIdx<r.steps.length)bindQuickTimer();
+  card.querySelectorAll("input[data-addon]").forEach(c=>c.onchange=()=>toggleAddon(byId[r.id],c.dataset.addon,c.checked));
+  card.querySelectorAll("button[data-choice]").forEach(b=>b.onclick=()=>pickChoice(r,b.dataset.choice,+b.dataset.idx));
+  bindSwapControls(card);
+  if(swapped)$("restoreBtn").onclick=()=>{delete overrides[dayIdx];saveOverrides();initDay(dayIdx)};
+}
+// Picking a different doneness restarts the current step's timer if that step depends on it.
+function pickChoice(r,cid,idx){
+  settings.choices[r.id+"."+cid]=idx;saveSettings();
+  if(r.steps[stepIdx]?.by===cid){clearInterval(timerId);running=false;phase="task";secLeft=stepMin(r,stepIdx)*60}
+  renderDays();renderRecipe();renderChecklist();
+}
+function renderChecklist(){
+  const r=cur(),el=$("checklist");el.innerHTML="";
+  if(settings.gatherFirst||gathering){
+    const g=document.createElement("div");
+    g.className="check-item "+(gathering?"current":"done");
+    g.innerHTML=`<div class="box">${gathering?"":"✓"}</div><div class="nm">Get everything out</div><div class="mn">no timer</div>`;
+    el.appendChild(g);
+  }
+  r.steps.forEach((st,i)=>{
+    const d=document.createElement("div"),current=stepStatus[i]==="current"&&!gathering;
+    d.className="check-item "+(stepStatus[i]==="done"?"done":"")+(current?" current":"");
+    d.innerHTML=`<div class="box">${stepStatus[i]==="done"?"✓":""}</div><div class="nm">${st.name}</div><div class="mn" ${st.timer===false?'title="No timer for this step"':""}>${st.prep?`prep · ${stepPrepText(st)}`:stepMin(r,i)?`${st.timer===false?"~":""}${stepMin(r,i)} min`:""}</div>`;
+    el.appendChild(d);
+  });
+  if(cookTotal(r)){
+    const t=document.createElement("div");t.className="side-total";
+    t.innerHTML=`<span>Cooking</span><span>${fmtMin(cookTotal(r))}</span>`;el.appendChild(t);
+  }
+  if(prepTotal(r)){
+    const p=document.createElement("div");p.className="side-total";
+    p.innerHTML=`<span>Prep ahead</span><span>${prepText(r)}</span>`;el.appendChild(p);
+  }
+}
+function toggleRun(){
+  unlockAudio();
+  running=!running;
+  clearInterval(timerId);
+  if(running){endsAt=Date.now()+secLeft*1000;timerId=setInterval(tick,1000)}
+  else secLeft=Math.max(0,secondsUntil(endsAt));
+  renderRecipe();
+}
+// Timers count down to a clock time rather than counting ticks, because browsers run background
+// tabs' intervals rarely (Chrome: about once a minute), which made timers fall far behind.
+function tick(){
+  const left=secondsUntil(endsAt);
+  if(left<0){
+    if(phase==="task"){
+      phase="grace";endsAt+=120*1000;secLeft=Math.max(0,secondsUntil(endsAt));beep();renderRecipe();
+      if(settings.autoRead)speak("Time's up. Take up to 2 more minutes if you need them, then press Done.");
+      return;
+    }
+    else{completeStep();return}
+  }
+  secLeft=left;
+  const t=$("timerDisp");if(t&&view==="week"){
+    t.textContent=fmt(secLeft);
+    const l=$("leftTxt");if(l)l.textContent=progressText();
+    const b=$("barFill");if(b)b.style.width=progressPct()+"%";
+  }
+}
+function resetTimer(){
+  running=false;clearInterval(timerId);phase="task";
+  secLeft=stepMin(cur(),stepIdx)*60;renderRecipe();
+}
+function completeStep(){
+  clearInterval(timerId);running=false;
+  unlockAudio();
+  stepStatus[stepIdx]="done";stepIdx++;phase="task";startStep();
+  const r=cur();
+  if(stepIdx<r.steps.length){stepStatus[stepIdx]="current";secLeft=stepMin(r,stepIdx)*60}
+  renderRecipe();renderChecklist();
+  if(settings.autoRead)speak(stepIdx<r.steps.length?stepSpeech(r,stepIdx):wrapUpText(r));
+}
+
+/* ---------- catalogue ---------- */
+function renderCatalog(){
+  const el=$("catView");
+  el.innerHTML=`
+  <div class="card">
+    <h2 class="recipe-title">All recipes</h2>
+    <p class="recipe-sub">Want something different? Pick a recipe and it replaces that day's meal. Times are the sum of each step's timer. Costs are rough U.S. average estimates per serving — your actual prices may vary.</p>
+    <div class="filters">
+      <input type="search" id="q" placeholder="Search, e.g. soup, pasta, chicken, breakfast" aria-label="Search recipes" value="${cat.q.replace(/"/g,"&quot;")}">
+      <label>Sort <select id="sort">
+        <option value="quick">Quickest first</option>
+        <option value="long">Longest first</option>
+        <option value="az">A to Z</option>
+      </select></label>
+      <label>Dish type <select id="typeSel"><option value="">All types</option>${USED_DISH_TYPES.map(t=>`<option value="${t}">${DISH_TYPES[t]}</option>`).join("")}</select></label>
+      <label>Cuisine <select id="cuisineSel"><option value="">All cuisines</option>${CUISINES.map(c=>`<option>${c}</option>`).join("")}</select></label>
+      <label>Cook on <select id="daySel">${DAY_NAMES.map((d,i)=>`<option value="${i}">${d}${i===TODAY?" (today)":""}</option>`).join("")}</select></label>
+    </div>
+    ${chipGroupHtml("show","Which recipes",[["","All recipes"],["fav","♥ Favorites only"],["byo","Build your own"],["mine","My recipes"]])}
+    ${chipGroupHtml("meal","Meal",[["","Any meal"],...Object.entries(MEALS)])}
+    ${chipGroupHtml("diet","Diet",[["","Any diet"],["vegetarian","Vegetarian"],["vegan","Vegan"],["halal","Halal-friendly"],["glutenfree","Gluten-free"]])}
+    <div id="dietAdaptRow" hidden>${chipGroupHtml("dietAdapt","Recipes that can be changed to fit",[["","Already fits"],["yes","Also show ones that can be changed to fit"]])}</div>
+    ${chipGroupHtml("max","Maximum cooking time",[[0,"Any time"],[20,"Under 20 min"],[30,"Under 30 min"],[45,"Under 45 min"]])}
+    ${chipGroupHtml("maxCost","Maximum cost per serving",[[0,"Any cost"],[2,"Under $2/serving"],[3,"Under $3/serving"],[5,"Under $5/serving"]])}
+    ${chipGroupHtml("prep","Prep ahead (marinating or soaking)",[["","Any prep"],["none","No prep ahead"],["30","Up to 30 min prep"],["120","Up to 2 hr prep"]])}
+    <div class="filters" style="margin-top:4px">
+      <input type="text" id="pantryQ" placeholder="Ingredients you already have, comma-separated (e.g. garlic, rice, eggs)" aria-label="Ingredients you have" value="${cat.pantry.replace(/"/g,"&quot;")}">
+    </div>
+    <p class="count" id="count"></p>
+    <div id="list"></div>
+  </div>`;
+  $("sort").value=cat.sort;$("daySel").value=cat.day;$("cuisineSel").value=cat.cuisine;$("typeSel").value=cat.type;
+  $("q").oninput=e=>{cat.q=e.target.value;renderList()};
+  $("sort").onchange=e=>{cat.sort=e.target.value;renderList()};
+  $("cuisineSel").onchange=e=>{cat.cuisine=e.target.value;renderList()};
+  $("typeSel").onchange=e=>{cat.type=e.target.value;renderList()};
+  $("daySel").onchange=e=>{cat.day=+e.target.value;renderList()};
+  $("pantryQ").oninput=e=>{cat.pantry=e.target.value;renderList()};
+  el.querySelectorAll(".chips[data-key]").forEach(group=>{
+    const key=group.dataset.key,numeric=typeof cat[key]==="number";
+    group.querySelectorAll("button").forEach(b=>b.onclick=()=>{
+      cat[key]=numeric?+b.dataset.value:b.dataset.value;
+      group.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));
+      renderList();
+    });
+  });
+  renderList();
+}
+function chipGroupHtml(key,label,choices){
+  return `<div class="chips" role="group" aria-label="${label}" data-key="${key}">
+    ${choices.map(([v,l])=>`<button data-value="${v}" aria-pressed="${cat[key]===v}">${l}</button>`).join("")}
+  </div>`;
+}
+function missingFor(r,haveTokens){
+  return r.pantry.filter(item=>{
+    if(isStaple(item))return false;
+    const li=item.toLowerCase();
+    return !haveTokens.some(h=>li.includes(h)||h.includes(li));
+  });
+}
+function renderList(){
+  const words=cat.q.toLowerCase().split(/[\s,]+/).filter(Boolean);
+  const haveTokens=cat.pantry.split(",").map(s=>s.trim().toLowerCase()).filter(Boolean);
+  let list=RECIPES.filter(r=>{
+    if(cat.max&&cookTotal(r)>=cat.max)return false;
+    if(cat.prep==="none"&&prepTotal(r))return false;
+    if(cat.prep&&cat.prep!=="none"&&(prepTotal(r)>+cat.prep||r.steps.some(s=>s.prep&&s.overnight)))return false;
+    if(cat.maxCost&&(r.cost===null||effectiveCost(r)>=cat.maxCost))return false;
+    if(cat.diet&&!r.diet.includes(cat.diet)&&!(cat.dietAdapt&&canBeMade(r,cat.diet)))return false;
+    if(cat.cuisine&&r.cuisine!==cat.cuisine)return false;
+    if(cat.show==="fav"&&!favorites.has(r.id))return false;
+    if(cat.show==="byo"&&!r.byo)return false;
+    if(cat.show==="mine"&&!r.mine)return false;
+    if(cat.meal&&!r.meal.includes(cat.meal))return false;
+    if(cat.type&&!r.tags.includes(cat.type))return false;
+    return textHasAll(SEARCH_TEXT[r.id],words);
+  });
+  // Recipes whose name, meal, or dish type matches the search come before ones that only mention it.
+  const withMissing=list.map(r=>({r,missing:haveTokens.length?missingFor(r,haveTokens):null,
+    weak:words.length>0&&!textHasAll(TYPE_TEXT[r.id],words)}));
+  withMissing.sort((a,b)=>{
+    if(a.weak!==b.weak)return a.weak?1:-1;
+    if(cat.diet){
+      const d=a.r.diet.includes(cat.diet)-b.r.diet.includes(cat.diet);
+      if(d)return -d;
+    }
+    if(haveTokens.length){
+      const d=a.missing.length-b.missing.length;
+      if(d)return d;
+    }
+    if(cat.sort==="az")return a.r.title.localeCompare(b.r.title);
+    if(cat.sort==="long")return cookTotal(b.r)-cookTotal(a.r)||a.r.title.localeCompare(b.r.title);
+    return cookTotal(a.r)-cookTotal(b.r)||a.r.title.localeCompare(b.r.title);
+  });
+  $("dietAdaptRow").hidden=!cat.diet;
+  $("count").textContent=`${withMissing.length} ${withMissing.length===1?"recipe":"recipes"}`;
+  const d=cat.day,L=$("list"),plan=planArr();
+  if(!withMissing.length){
+    const msg=cat.show==="fav"&&!favorites.size
+      ?"No favorites yet. Tap ♡ Favorite on any recipe to save it here."
+      :cat.show==="mine"&&!RECIPES.some(r=>r.mine)?"No recipes of your own yet. Make one in the My recipes tab, or press Copy and edit on any recipe here."
+      :"No recipes match. Try a different word, or loosen the meal, dish type, diet, cuisine, cost, time, or prep filters.";
+    L.innerHTML=`<div class="empty">${msg}</div>`;return;
+  }
+  L.innerHTML=withMissing.map(({r,missing})=>{
+    const onDays=plan.map((id,i)=>id===r.id?DAYS[i]:null).filter(Boolean);
+    const already=plan[d]===r.id;
+    const pantryNote=haveTokens.length?(missing.length?`<p class="missing">Missing: ${missing.join(", ")}</p>`:`<p class="have-all">You have everything for this one.</p>`):"";
+    const mine=activeSwapsFor(r).length,avail=swapsFor(r).length;
+    const sticker=mine?`<span class="sticker mine">Uses your swaps (${mine})</span>`:avail?`<span class="sticker">${avail} ${avail===1?"swap":"swaps"} available</span>`:"";
+    const cost=effectiveCost(r);
+    return `<article class="item">
+      <div class="item-top"><h3>${r.title}</h3><span class="badges">${timeText(r)?`<span class="time">${timeText(r)}</span>`:""}${cost===null?"":`<span class="cost">${cost<r.cost?`<s class="was">${r.cost.toFixed(2)}</s> `:""}${fmtCost(cost)}</span>`}</span></div>
+      <p class="meta">${[r.cuisine,mealTypeText(r),`Serves ${r.serves}`,r.steps.length?`${r.steps.length} steps`:"no steps",caloriesText(r),onDays.length?`on your plan for ${onDays.join(", ")}`:""].filter(Boolean).join(" · ")}</p>
+      ${r.desc?`<p class="dish-desc">${r.desc}</p>`:""}
+      <div class="labels">${dietLabelsHtml(r)}${cat.diet&&!r.diet.includes(cat.diet)?`<span class="sticker">Can be made ${DIET_NAMES[cat.diet]}</span>`:""}${sticker}</div>
+      ${pantryNote}
+      <details><summary>Ingredients and steps</summary>
+        <h4>Ingredients</h4><ul>${ingredientsHtml(r,false)}</ul>
+        ${r.byo?`<h4>Make it your own</h4>${r.addons?`<p class="byo-group"><strong>Options with their own steps</strong>${r.addons.map(a=>a.label).join(" · ")}</p>`:""}${byoHtml(r)}`:""}
+        ${(r.choose||[]).map(c=>`<h4>${c.label}</h4><ul>${c.options.map(o=>`<li><strong>${o.label}${o.undercooked?" (not fully cooked)":""}:</strong> ${o.note}</li>`).join("")}</ul>`).join("")}
+        ${r.safety?safetyNoteHtml(r.safety):""}
+        ${dietNotesFor(r).length?`<h4>${dietNotesTitle(dietNotesFor(r))}</h4>${dietNotesBody(dietNotesFor(r))}`:""}
+        ${r.steps.length?`<h4>Steps</h4><ol>${catalogStepsHtml(r)}</ol>`:""}
+      </details>
+      <div class="controls">
+        <button class="btn" data-id="${r.id}" ${already?"disabled":""}>${already?`Already planned for ${DAY_NAMES[d]}`:`Cook this on ${DAY_NAMES[d]}`}</button>
+        ${favButtonHtml(r)}
+        ${r.mine?`<button class="btn secondary" data-edit="${r.id}">Edit</button>`:""}
+        <button class="btn secondary" data-copy="${r.id}">Copy and edit</button>
+      </div>
+    </article>`;
+  }).join("");
+  bindFavButtons(L,renderList);
+  bindEditButtons(L);
+  L.querySelectorAll("button[data-id]").forEach(b=>b.onclick=()=>{
+    overrides[d]=b.dataset.id;saveOverrides();
+    dayIdx=d;setView("week");initDay(d);window.scrollTo(0,0);
+  });
+}
+
+/* ---------- shopping list ---------- */
+// Builds one combined list from the planned recipes. Each ingredient line is split into single
+// ingredients, named by the recipe's pantry keyword when one matches, and amounts that share a
+// unit are added together.
+const SHOP_KEY="weekly-recipes-shopping";
+let shop={days:[0,1,2,3,4,5,6],have:[...STAPLES],checked:[],extras:[]};
+try{
+  const s=JSON.parse(localStorage.getItem(SHOP_KEY)||"null");
+  if(s&&typeof s==="object"){
+    if(Array.isArray(s.days))shop.days=s.days.filter(d=>Number.isInteger(d)&&d>=0&&d<7);
+    for(const key of ["have","checked"])if(Array.isArray(s[key]))shop[key]=s[key].filter(x=>typeof x==="string");
+    shop.extras=cleanExtras(s.extras);
+  }
+}catch(e){}
+function saveShop(){try{localStorage.setItem(SHOP_KEY,JSON.stringify(shop))}catch(e){}}
+
+// Checked in order; the first match wins.
+const SHOP_SECTIONS=[
+ ["Frozen",/frozen/],
+ ["Pantry & spices",/broth|stock|sauce|paste|powder|dried|flour|meal\b|oil|vinegar|sugar|syrup|honey|spice|seasoning|flakes|seeds|starch|canned|can \(|coconut milk|evaporated|condensed|noodle|pasta|spaghetti|macaroni|lasagna|\brice|oats|couscous|bulgur|freekeh|lentil|beans|chickpea|pigeon peas|tahini|peanut|\bnuts?\b|walnut|pecan|raisin|chocolate|cocoa|vanilla|baking|yeast|salt|^pepper$|black pepper|cumin|cinnamon|paprika|turmeric|oregano|bouillon|ketchup|mustard|mayo|salsa|kimchi|olives|capers|pickles/],
+ ["Bread & tortillas",/bread|bun|roll\b|rolls|tortilla|tostada|pita|naan|roti|injera|baguette|english muffin|biscuit|dough|wrapper|rice paper/],
+ ["Meat & fish",/chicken|beef|steak|lamb|pork|turkey|sausage|bacon|ham\b|pepperoni|shrimp|fish|salmon|tuna|cod\b|catfish|tilapia|meat|ribs|chuck|sirloin|ribeye|wings|saltfish|chorizo|chicharr/],
+ ["Fruits, vegetables & herbs",/onion|garlic|ginger|potato|carrot|celery|pepper|tomato|lettuce|romaine|spinach|kale|cabbage|broccoli|cauliflower|zucchini|squash|pumpkin|eggplant|cucumber|mushroom|sprouts|snap peas|green beans|avocado|lemon|lime|orange|apple|banana|mango|pineapple|plantain|yuca|cassava|beet|radish|daikon|turnip|okra|chayote|papaya|corn|basil|cilantro|parsley|mint|dill|thyme|rosemary|lemongrass|scallion|shallot|leek|chile|chili|jalape|habanero|scotch bonnet|collard|greens|asparagus|berr|vegetable|herb|tofu|fruit|peas|pear|shiitake|galangal|calamansi|ackee/],
+ ["Dairy & eggs",/milk|butter|cream|cheese|parmesan|mozzarella|cheddar|feta|ricotta|paneer|yogurt|egg|gruy|queso|kashk|ghee|jack|provolone|swiss|ranch/],
+ ["Pantry & spices",/./]
+];
+// The order sections appear in, roughly how a store is laid out.
+const SHOP_ORDER=["Fruits, vegetables & herbs","Meat & fish","Dairy & eggs","Bread & tortillas","Frozen","Pantry & spices"];
+const shopSection=name=>SHOP_SECTIONS.find(([,re])=>re.test(name.toLowerCase()))[0];
+const FRACTIONS={"½":1/2,"¼":1/4,"¾":3/4,"⅓":1/3,"⅔":2/3,"⅛":1/8};
+const UNIT_RE=/^(kg|g|ml|l|cm|pieces?|cups?|tbsp|tsp|cans?|lb|oz|cloves?|slices?|bunch(?:es)?|heads?|stalks?|sprigs?|packs?|packets?|sheets?|blocks?|ears?)\b\.?\s*/i;
+const SIZE_RE=/^(large|medium|small|big|very|thick|thin|fresh|whole)\s+/i;
+const escapeRe=t=>t.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+// Different names for the same thing on the shelf.
+const SHOP_ALIASES={"black pepper":"pepper","kosher salt":"salt","table salt":"salt","coarse salt":"salt","sea salt":"salt"};
+function itemKey(name){
+  const key=name.toLowerCase().split(" ").map(singular).join(" ");
+  return SHOP_ALIASES[key]||(/\bwater$/.test(key)?"water":key);
+}
+const PREP_RE=/,\s*(?:finely |thinly |roughly |very |lightly |well )?(?:minced|diced|chopped|sliced|drained|peeled|divided|cut|grated|halved|thawed|rinsed|softened|melted|crumbled|shredded|beaten|cubed|trimmed|cored|seeded|smashed|soaked|quartered|torn|julienned|crushed|stirred|pierced|toasted|boiled|squeezed|separated|broken|at room|with (?:their|its)|in |into |about |plus |cooled|warm|cold|hot|tied|picked|ground and|browned|blended|slit|snipped|left|optional)[^,]*/gi;
+// Words left over from notes, not things to buy.
+const NOT_AN_ITEM=/^(?:fresh|fry|soft|sprinkle|topping|green|white|red|brown|medium-?|metal|each|more|extra)$/;
+// Drops notes and prep words: "2 garlic cloves, minced (or 1 tsp powder), for the sauce" -> "2 garlic cloves".
+function cleanPart(part){
+  return part.replace(/\([^)]*\)/g,"").replace(/^(optional|to serve)[^:]*:\s*/i,"")
+    .replace(/^(?:a |about |a big bowl of |a few |pinch of |a pinch of |large pinch of |(?:a |1 )?(?:large |small )?handful(?: of)? )/i,"")
+    .split(/,?\s*\b(?:to (?:serve|taste|finish|scoop|dip|garnish)|then more|as needed|for (?:the|frying|dipping|serving|garnish|soaking|croque)|if\b|so\b)/i)[0]
+    .replace(PREP_RE,"").replace(/\s+/g," ").trim();
+}
+
+// "Sauce: 3 tbsp soy sauce, 1 tsp sesame oil" -> ["3 tbsp soy sauce", "1 tsp sesame oil"].
+function ingredientParts(line){
+  const label=line.match(/^([^:\d]*):\s*/);
+  const body=label?line.slice(label[0].length):line;
+  return body.split(/,\s*(?=(?:and\s+)?[\d½¼¾⅓⅔⅛]|pinch\b)/i).map(t=>t.replace(/^and\s+/i,"").trim()).filter(Boolean);
+}
+// Pantry keywords named in a part, longest first so "garlic powder" wins over "garlic".
+function keywordsIn(part,pantry){
+  let text=part.toLowerCase();const found=[];
+  for(const k of [...pantry].sort((a,b)=>b.length-a.length)){
+    const re=new RegExp(`\\b${escapeRe(singular(k.toLowerCase()))}(?:s|es)?\\b`,"g");
+    // A plain "pepper" keyword must not swallow bell peppers or chiles.
+    if(isStaple(k)&&/(bell|red|green|yellow|chili|cayenne|sweet|hot|banana|jalape)\w*\s+pepper/.test(text))continue;
+    if(re.test(text)){found.push(k);text=text.replace(re," ")}
+  }
+  return found;
+}
+// Name for a part no pantry keyword matched: "2 tbsp oil, for frying" -> "oil".
+function fallbackNames(part){
+  let t=part.replace(/^[\d½¼¾⅓⅔⅛.\s–-]+/,"").replace(SIZE_RE,"").replace(UNIT_RE,"");
+  while(SIZE_RE.test(t))t=t.replace(SIZE_RE,"");
+  return t.split(/,|\band\b/i).map(n=>n.trim().toLowerCase()).filter(n=>/[a-z]/.test(n)&&!NOT_AN_ITEM.test(n));
+}
+// "200 g spaghetti" -> {qty:200, unit:"g"}; "4 garlic cloves" -> {qty:4, unit:"garlic clove"}.
+// A count whose words don't name the item ("6 bone-in, skin-on chicken thighs") is counted in the item's name.
+function parseAmount(part,name){
+  const m=part.match(/^(\d+(?:\.\d+)?)?\s*([½¼¾⅓⅔⅛])?(\s*[–-]\s*\d+)?\s*/);
+  if(!m||(!m[1]&&!m[2])||m[3])return null;
+  const qty=(m[1]?+m[1]:0)+(m[2]?FRACTIONS[m[2]]:0);
+  let rest=part.slice(m[0].length);
+  const unit=rest.match(UNIT_RE);
+  if(unit){
+    const u=unit[1].toLowerCase();
+    return {qty,unit:u==="l"?"L":singular(u)};
+  }
+  while(SIZE_RE.test(rest))rest=rest.replace(SIZE_RE,"");
+  const noun=itemKey(rest.split(",")[0].trim()),key=itemKey(name);
+  return {qty,unit:noun.includes(key)?noun:key};
+}
+function fmtQty(q,unit){
+  if(unit==="g"||unit==="ml")return String(Math.round(q));
+  const whole=Math.floor(q+1e-9),frac=q-whole;
+  const sym=Object.entries(FRACTIONS).find(([,v])=>Math.abs(v-frac)<0.02);
+  if(frac<0.02)return String(whole);
+  if(sym)return (whole?whole:"")+sym[0];
+  return (Math.round(q*10)/10).toString();
+}
+const fmtUnit=(q,unit)=>q>1&&!["g","ml","L","kg","lb","oz","tbsp","tsp"].includes(unit)?unit.replace(/(\w+)$/,plural):unit;
+function amountText(uses){
+  const sums=new Map();let unmeasured=false;
+  for(const u of uses){if(u)sums.set(u.unit,(sums.get(u.unit)||0)+u.qty);else unmeasured=true}
+  const parts=[...sums].map(([unit,q])=>`${fmtQty(q,unit)} ${fmtUnit(q,unit)}`);
+  return parts.length?parts.join(" + ")+(unmeasured?" + more":""):"";
+}
+function shoppingItems(){
+  const plan=planArr(),items=new Map();
+  for(const d of [...shop.days].sort()){
+    const r=withAddons(byId[plan[d]]),swaps=activeSwapsFor(r);
+    for(const line of r.ingredients)for(const rawPart of ingredientParts(line)){
+      const part=cleanPart(rawPart),keys=keywordsIn(part,r.pantry);
+      const names=keys.length?keys:fallbackNames(part);
+      for(const name of names){
+        const key=itemKey(name);
+        if(!items.has(key))items.set(key,{key,name:name[0].toUpperCase()+name.slice(1),uses:[],days:new Set(),swaps:new Set()});
+        const item=items.get(key);
+        item.uses.push(names.length===1?parseAmount(part,name):null);
+        item.days.add(d);
+        swaps.filter(s=>s.match.test(rawPart)).forEach(s=>item.swaps.add(`Swap on: ${chosenOption(s).to}`));
+      }
+    }
+  }
+  return [...items.values()].sort((a,b)=>a.name.localeCompare(b.name));
+}
+const shopForText=item=>`for ${[...item.days].map(d=>DAYS[d]).join(", ")}`+[...item.swaps].map(t=>` · ${t}`).join("");
+function shopItemHtml(item,had){
+  const got=shop.checked.includes(item.key),amount=amountText(item.uses),forText=shopForText(item),key=escapeHtml(item.key);
+  if(had)return `<div class="shop-item"><span style="flex:1"><span class="shop-name">${item.name}</span><span class="shop-for">${forText}</span></span>
+    <button class="btn secondary" data-need="${key}">Need it</button></div>`;
+  return `<div class="shop-item ${got?"got":""}">
+    <label><input type="checkbox" data-check="${key}" ${got?"checked":""}>
+      <span><span class="shop-name">${item.name}</span>${amount?` <span class="shop-amt">— ${amount}</span>`:""}<span class="shop-for">${forText}</span></span></label>
+    <button class="btn secondary" data-have="${key}">Have it</button>
+  </div>`;
+}
+function renderShop(){
+  if(openListId&&savedList(openListId))return renderSavedList();
+  openListId=null;
+  const el=$("shopView"),plan=planArr(),items=shoppingItems();
+  // Keep "Already have" open across redraws so several items can be moved back in a row.
+  const haveOpen=$("haveBox")?.open;
+  const need=items.filter(i=>!shop.have.includes(i.key)),had=items.filter(i=>shop.have.includes(i.key));
+  const extras=shop.extras.map(extraRow),total=need.length+extras.length;
+  const got=[...need,...extras].filter(i=>shop.checked.includes(i.key)).length;
+  const cost=shop.days.reduce((a,d)=>{const r=withAddons(byId[plan[d]]);return a+(effectiveCost(r)??0)*r.serves},0);
+  const sections=SHOP_ORDER.map(title=>[title,need.filter(i=>shopSection(i.name)===title),extras.filter(x=>x.section===title)])
+    .filter(([,fromRecipes,own])=>fromRecipes.length||own.length);
+  el.innerHTML=`<div class="card">
+    <h2 class="recipe-title">Shopping list</h2>
+    <p class="recipe-sub">Everything you need for the days you pick, added up across recipes. Tap <strong>Have it</strong> for things already in your kitchen, and add anything else you need at the bottom.</p>
+    ${shopNotice?`<p class="swapnote" role="status">${shopNotice}</p>`:""}
+    <div class="shop-days" role="group" aria-label="Days to shop for">
+      ${DAYS.map((d,i)=>`<label title="${byId[plan[i]].title}"><input type="checkbox" data-day="${i}" ${shop.days.includes(i)?"checked":""}> ${d}: ${byId[plan[i]].title}</label>`).join("")}
+    </div>
+    ${total?`<div class="shop-summary">
+      <span><strong>${got} of ${total}</strong> in your cart${shop.days.length?` · about $${cost.toFixed(2)} for these meals (rough estimate)`:""}</span>
+      ${got?`<button class="btn secondary" id="clearChecksBtn">Clear checks</button>`:""}
+    </div>`:""}
+    ${shop.days.length||extras.length?"":`<div class="empty">Pick at least one day above to build your list, or add your own items below.</div>`}
+    ${total&&got===total?`<p class="have-all">Everything's in your cart. Happy cooking!</p>`:""}
+    ${sections.map(([title,fromRecipes,own])=>`<section class="shop-section"><h3>${title}</h3>${fromRecipes.map(i=>shopItemHtml(i,false)).join("")}${own.map(x=>listRowHtml(x,shop.checked.includes(x.key),"data-check","data-extra-remove")).join("")}</section>`).join("")}
+    ${addItemFormHtml("addExtraForm")}
+    ${had.length?`<details class="ingr" id="haveBox" style="margin-top:16px" ${haveOpen?"open":""}><summary>Already have (${had.length})</summary>
+      <p class="recipe-sub" style="margin:6px 0 4px">These stay here every week until you tap Need it. Glance over them before you shop.</p>
+      ${had.map(i=>shopItemHtml(i,true)).join("")}</details>`:""}
+    ${total?`<div class="shop-save my-editor">
+      <label class="my-field">Save a copy of this list as<input type="text" id="saveListName" maxlength="${LIST_LIMITS.name}" value="${escapeHtml(weekLabel())}"></label>
+      <div class="controls" style="margin-top:8px"><button class="btn" id="saveListBtn">Save this list</button><button class="btn secondary" id="copyListBtn">Copy as text</button></div>
+    </div>`:""}
+    ${savedListsHtml()}
+  </div>`;
+  el.querySelectorAll("input[data-day]").forEach(c=>c.onchange=()=>{
+    const d=+c.dataset.day;
+    shop.days=c.checked?[...shop.days,d]:shop.days.filter(x=>x!==d);
+    saveShop();renderShop();
+  });
+  el.querySelectorAll("input[data-check]").forEach(c=>c.onchange=()=>{
+    const k=c.dataset.check;
+    shop.checked=c.checked?[...shop.checked,k]:shop.checked.filter(x=>x!==k);
+    saveShop();renderShop();
+  });
+  el.querySelectorAll("button[data-have]").forEach(b=>b.onclick=()=>{shop.have.push(b.dataset.have);saveShop();renderShop()});
+  el.querySelectorAll("button[data-need]").forEach(b=>b.onclick=()=>{shop.have=shop.have.filter(x=>x!==b.dataset.need);saveShop();renderShop()});
+  if(got)$("clearChecksBtn").onclick=()=>{shop.checked=[];saveShop();renderShop()};
+  bindCurrentListExtras(el);
+}
+
+renderSwapsPanel();
+initDay(TODAY);
+updateWakeLock();
+// Some browsers only grant the wake lock after the user interacts with the page.
+document.addEventListener("click",updateWakeLock,{once:true});
+</script>
+</body></html>
