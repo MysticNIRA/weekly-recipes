@@ -27,6 +27,17 @@ h1{font-size:20px;margin:0}
 .tabs{display:flex;background:var(--soft);border-radius:8px;padding:3px}
 .tabs button{border:none;background:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:14px;color:var(--muted)}
 .tabs button[aria-selected="true"]{background:var(--card);color:var(--text);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.tab-icon{display:none}
+/* Phones: the tabs sit at the bottom of the screen, within reach of a thumb. */
+@media (max-width:760px){
+  body{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+  .tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;border-radius:0;padding:4px 4px calc(4px + env(safe-area-inset-bottom,0px));background:var(--card);border-top:1px solid var(--line);box-shadow:0 -2px 8px rgba(0,0,0,.08)}
+  .tabs button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:54px;padding:4px 2px;font-size:12px}
+  .tabs button[aria-selected="true"]{background:var(--soft);color:var(--accent);box-shadow:none}
+  .tab-icon{display:block;font-size:20px;line-height:1}
+  .tabs:has(.tour-target){z-index:51}
+  .tour.top{align-items:flex-start}
+}
 .days{margin-bottom:16px}
 .days-hint{font-size:13px;color:var(--muted);margin:0 0 6px}
 .days-list{display:flex;flex-direction:column;gap:4px}
@@ -223,6 +234,31 @@ details.ingr li{margin:3px 0}
 .gather-row input{width:20px;height:20px;flex-shrink:0;margin-top:1px}
 .gather-row.got>span{color:var(--muted);text-decoration:line-through}
 .empty{padding:20px;text-align:center;color:var(--muted);font-size:14px}
+/* This week has a planning screen (the week) and a cooking screen (one recipe). Planning on a
+   computer puts the week beside the full recipe; on a phone, one "today" card sits above the week. */
+.wrap.wide{max-width:1240px}
+.btn.big{font-size:16px;font-weight:600;padding:12px 20px}
+.cook-bar{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin-bottom:12px;font-size:14px;color:var(--muted)}
+.cook-bar .link{font-size:14px}
+#reminders:empty{display:none}
+.today-hero{padding:24px}
+.hero-when{margin:0 0 4px;font-size:13px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.04em}
+.hero-title{margin:0 0 6px;font-size:26px}
+.today-hero .controls{margin-top:16px}
+.recipe-start{margin:4px 0 14px}
+#weekView.cooking .rhead{margin-bottom:10px}
+.recipe-more{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+@media (min-width:1000px){
+  #weekView.planning{display:grid;grid-template-columns:270px minmax(0,1fr);gap:0 16px;align-items:start}
+  #weekView.planning>#reminders{grid-column:1/-1}
+  #weekView.planning .days-list button{grid-template-columns:4.2em minmax(0,1fr)}
+  #weekView.planning .days-list .t{grid-column:2;text-align:left}
+}
+@media (max-width:760px){
+  #weekView.planning{display:flex;flex-direction:column}
+  #weekView.planning>#todayHero{order:-1;margin-bottom:16px}
+  #weekView.planning>#reminders{order:-2}
+}
 @media (max-width:760px){.wrap{flex-direction:column}.side{width:100%;position:static}.rhead{flex-direction:column}}
 @media (prefers-reduced-motion:reduce){.bar span{transition:none}}
 /* accessibility settings (colors are set from JS, see applyLook) */
@@ -240,10 +276,10 @@ details.ingr li{margin:3px 0}
       <h1>Weekly Recipes</h1>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <div class="tabs" role="tablist">
-          <button role="tab" id="tabWeek" aria-selected="true">This week</button>
-          <button role="tab" id="tabCat" aria-selected="false">All recipes</button>
-          <button role="tab" id="tabShop" aria-selected="false">Shopping list</button>
-          <button role="tab" id="tabMine" aria-selected="false">My recipes</button>
+          <button role="tab" id="tabWeek" aria-selected="true"><span class="tab-icon" aria-hidden="true">📅</span>This week</button>
+          <button role="tab" id="tabCat" aria-selected="false"><span class="tab-icon" aria-hidden="true">📖</span>All recipes</button>
+          <button role="tab" id="tabShop" aria-selected="false"><span class="tab-icon" aria-hidden="true">🛒</span>Shopping list</button>
+          <button role="tab" id="tabMine" aria-selected="false"><span class="tab-icon" aria-hidden="true">✏️</span>My recipes</button>
         </div>
         <button class="btn secondary" id="swapsBtn" aria-expanded="false" aria-controls="swapsPanel">Swaps</button>
         <button class="btn secondary" id="settingsBtn" aria-expanded="false" aria-controls="settingsPanel">Settings</button>
@@ -293,8 +329,10 @@ details.ingr li{margin:3px 0}
       </section>
     </div>
     <div id="weekView">
+      <div class="cook-bar" id="cookBar" hidden></div>
       <div id="reminders"></div>
       <div class="days" id="days"></div>
+      <div class="card today-hero" id="todayHero" hidden></div>
       <div class="card" id="recipeCard"></div>
     </div>
     <div id="catView" hidden></div>
@@ -947,6 +985,7 @@ function setView(v,catDay=Math.max(dayOffset,0)){
   $("tabMine").setAttribute("aria-selected",v==="mine");
   $("weekView").hidden=v!=="week";
   $("side").hidden=v!=="week";
+  if(v!=="week")document.querySelector(".wrap").classList.remove("wide");
   $("catView").hidden=v!=="cat";
   $("shopView").hidden=v!=="shop";
   $("mineView").hidden=v!=="mine";
@@ -1177,6 +1216,9 @@ function toolsFor(r){
   return tools;
 }
 let gathering=false,gathered=new Set();
+// cooking: the cooking screen is showing. cookStarted: this day's recipe was started, so going
+// back to the week keeps its progress and the button says Continue cooking.
+let cooking=false,cookStarted=false;
 function gatherRowHtml(key,text,extra){
   return `<label class="gather-row ${gathered.has(key)?"got":""}"><input type="checkbox" data-gather="${encodeURIComponent(key)}" ${gathered.has(key)?"checked":""}><span>${text}${extra}</span></label>`;
 }
@@ -1221,7 +1263,7 @@ function startStep(){
   clearInterval(checkInId);checkIns=0;stepStartedAt=Date.now();
   stopQuickTimer();
   const r=cur();
-  if(settings.checkIn&&!gathering&&stepIdx<r.steps.length&&stepUntimed(r,stepIdx)&&stepMin(r,stepIdx))checkInId=setInterval(checkInTick,5000);
+  if(cookStarted&&settings.checkIn&&!gathering&&stepIdx<r.steps.length&&stepUntimed(r,stepIdx)&&stepMin(r,stepIdx))checkInId=setInterval(checkInTick,5000);
 }
 function checkInTick(){
   const r=cur(),over=(Date.now()-stepStartedAt)/1000-stepMin(r,stepIdx)*60;
@@ -1290,6 +1332,7 @@ function wrapUpText(r){
 function initDay(offset){
   stopSpeaking();
   dayOffset=offset;daysShownFrom=mondayOffset(offset,TODAY);
+  cooking=false;cookStarted=false;
   stepIdx=0;phase="task";running=false;clearInterval(timerId);
   openPanels={ingr:null,swaps:false,byo:null,diet:false,scale:null};
   gathering=settings.gatherFirst;gathered=new Set();
@@ -1311,9 +1354,9 @@ function renderDays(){
   for(let offset=daysShownFrom;offset<daysShownFrom+7;offset++){
     const r=withAddons(byId[recipeIdOn(offset)]),shown=offset===dayOffset;
     const time=[cookTotal(r)?fmtMin(cookTotal(r)):"",prepTotal(r)?`+ ${prepText(r)} prep`:""].filter(Boolean).join(" ");
-    const when=offset===0?" · today":offset===1?" · tomorrow":"";
+    const when=offset===0?"<small>today</small>":offset===1?"<small>tomorrow</small>":"";
     rows.push(`<button data-offset="${offset}" class="${[shown&&"active",offset===0&&"today",offset<0&&"past"].filter(Boolean).join(" ")}" ${shown?'aria-current="true"':""}>
-      <span class="d">${DAYS[weekdayOf(dateAt(offset))]}<small>${monthDayText(dateAt(offset))}${when}</small></span>
+      <span class="d">${DAYS[weekdayOf(dateAt(offset))]}<small>${monthDayText(dateAt(offset))}</small>${when}</span>
       <span class="n">${r.title}</span><span class="t">${time}</span></button>`);
   }
   const ahead=daysShownFrom>thisWeek,more=daysShownFrom+7<DAYS_AHEAD;
@@ -1371,18 +1414,78 @@ function bindChangeNote({kind,date,key,w}){
     saveOverrides();saveDateChanges();initDay(dayOffset);
   };
 }
+/* ---------- planning and cooking screens ---------- */
+// Phones plan from a single "today" card, which feels less cluttered; computers have room to
+// show the week beside the full recipe and its checklist.
+const phoneScreen=matchMedia("(max-width:760px)");
+const heroShown=()=>phoneScreen.matches&&!cooking;
+phoneScreen.addEventListener("change",()=>{if(view==="week"){renderRecipe();renderChecklist()}});
+// Shows the parts of This week that belong to the screen in use. The checklist stays beside
+// the recipe while cooking, and on a computer while planning too.
+function applyWeekLayout(){
+  $("weekView").className=cooking?"cooking":"planning";
+  for(const id of ["reminders","days"])$(id).hidden=cooking;
+  $("cookBar").hidden=!cooking;
+  $("todayHero").hidden=!heroShown();
+  $("recipeCard").hidden=heroShown();
+  $("side").hidden=view!=="week"||heroShown();
+  document.querySelector(".wrap").classList.toggle("wide",view==="week"&&!cooking&&!phoneScreen.matches);
+}
+function cookButtonHtml(r){
+  const step=!gathering&&stepIdx<r.steps.length?` · step ${stepIdx+1} of ${r.steps.length}`:"";
+  const label=cookStarted?`Continue cooking${step}`:dayOffset===0?"Cook today's meal":"Start cooking";
+  return `<button class="btn big" id="cookBtn">${label} →</button>`;
+}
+function startCooking(){
+  unlockAudio();
+  cooking=true;
+  if(!cookStarted){cookStarted=true;startStep()}
+  renderRecipe();renderChecklist();window.scrollTo(0,0);
+}
+// Back to planning. Timers keep running, and Continue cooking picks up where you left off.
+function backToWeek(){
+  cooking=false;
+  renderDays();renderRecipe();window.scrollTo(0,0);
+}
+function renderCookBar(){
+  $("cookBar").innerHTML=`<button class="link" id="backToWeekBtn">← Back to the week</button><span>${dateText(dayOffset)} · ${cur().title}</span>`;
+  $("backToWeekBtn").onclick=backToWeek;
+}
+// The phone's planning card: just the day's meal, when it is, and how long it takes.
+function renderHero(){
+  const r=cur(),change=planChange(dayOffset);
+  $("todayHero").innerHTML=`
+    <p class="hero-when">${dayOffset===0||dayOffset===1?`${dayWord(dayOffset)} · `:""}${dateText(dayOffset)}</p>
+    <h2 class="hero-title">${r.title}</h2>
+    <p class="recipe-sub">${[timeText(r),`serves ${r.serves}`,costText(r),caloriesText(r),lastCookedText(r.id)].filter(Boolean).join(" · ")}</p>
+    ${r.desc?`<p class="dish-desc">${r.desc}</p>`:""}
+    ${planAheadHtml(r)}
+    ${changeNoteHtml(change)}
+    <div class="controls">${cookButtonHtml(r)}${dayOffset>=0?`<button class="btn secondary" id="swapBtn">Pick a different recipe</button>`:""}</div>`;
+  $("cookBtn").onclick=startCooking;
+  if(dayOffset>=0)$("swapBtn").onclick=()=>setView("cat");
+  bindChangeNote(change);
+}
 function renderRecipe(){
   if(view!=="week")return;
+  applyWeekLayout();
+  if(cooking)renderCookBar();
+  // Only one of the two cards is filled, so their buttons' ids never clash.
+  if(heroShown()){$("recipeCard").innerHTML="";renderHero();return}
+  $("todayHero").innerHTML="";
   const r=cur(),card=$("recipeCard"),typingNote=noteFocus();
   const change=planChange(dayOffset);
   const available=swapsFor(r);
-  const head=`
+  const showingStep=cooking&&!gathering&&stepIdx<r.steps.length;
+  const top=`
     <div class="rhead">
       <div><h2 class="recipe-title">${r.title}</h2>
       <p class="recipe-sub">${[dayOffset===0||dayOffset===1?`${dayWord(dayOffset)} (${dateText(dayOffset)})`:dateText(dayOffset),cuisineText(r),mealTypeText(r),timeText(r),`serves ${r.serves}`,r.steps.length?`${r.steps.length} steps`:"no steps",costText(r),caloriesText(r),lastCookedText(r.id)].filter(Boolean).join(" · ")}</p>
       ${dietLabelsHtml(r)?`<div class="labels">${dietLabelsHtml(r)}</div>`:""}</div>
       <div class="controls">${favButtonHtml(r)}${r.mine?`<button class="btn secondary" data-edit="${r.id}">Edit recipe</button>`:""}${dayOffset>=0?`<button class="btn secondary" id="swapBtn">Pick a different recipe</button>`:""}</div>
-    </div>
+    </div>`;
+  const details=`
+    ${cooking?"":`<div class="recipe-start">${cookButtonHtml(r)}</div>`}
     ${r.desc?`<p class="dish-desc">${r.desc}</p>`:""}
     ${planAheadHtml(r)}
     ${r.safety?safetyNoteHtml(r.safety,"recipe-safety"):""}
@@ -1390,12 +1493,12 @@ function renderRecipe(){
     ${r.diet.includes("glutenfree")?`<p class="halal-note">Gluten-free as written. If you avoid gluten strictly, check the labels on broth, sauces, and spice blends, since some contain wheat.</p>`:""}
     ${changeNoteHtml(change)}
     ${servingsHtml(r)}
-    <details class="ingr" id="ingrBox" ${(openPanels.ingr??(!gathering&&stepIdx===0&&phase==="task"&&secLeft===stepMin(r,0)*60))?"open":""}>
+    <details class="ingr" id="ingrBox" ${openPanels.ingr?"open":""}>
       <summary>Ingredients (${r.ingredients.length})</summary>
       <ul>${ingredientsHtml(r,true)}</ul>
       ${readButtonHtml("readIngrBtn","Read ingredients")}
     </details>
-    ${r.byo?`<details class="ingr" id="byoBox" ${(openPanels.byo??stepIdx===0)?"open":""}>
+    ${r.byo?`<details class="ingr" id="byoBox" ${openPanels.byo?"open":""}>
       <summary>Make it your own${pickedAddons(r).length?` (${pickedAddons(r).length} picked)`:""}</summary>
       ${addonListHtml(r,addonsLocked(r))}
       ${r.addons&&(r.byo.intro||r.byo.ideas.length)?`<p class="byo-group"><strong>More ideas</strong></p>`:""}
@@ -1413,11 +1516,13 @@ function renderRecipe(){
       ${available.map(s=>swapRowHtml(s)).join("")}
     </details>`:""}
     ${noteBoxHtml(r.id,"ingr")}`;
-  if(gathering){
-    card.innerHTML=head+gatherHtml(r);
+  if(!cooking){
+    card.innerHTML=top;
+  }else if(gathering){
+    card.innerHTML=top+gatherHtml(r);
     bindGather(r);
   }else if(stepIdx>=r.steps.length){
-    card.innerHTML=head+(r.steps.length?`<p class="done-label">All steps done.</p><p class="done-note">${wrapUpText(r)}</p>`
+    card.innerHTML=top+(r.steps.length?`<p class="done-label">All steps done.</p><p class="done-note">${wrapUpText(r)}</p>`
       :`<p class="done-label">This recipe is just an ingredient list.</p><p class="done-note">Cook it your way. When you're done, put ingredients away and set your dishes aside to wash. Enjoy your meal!</p>`)
       +rateHtml(r)+`<button class="btn" id="againBtn">Start over</button>`;
     $("againBtn").onclick=()=>initDay(dayOffset);
@@ -1426,21 +1531,21 @@ function renderRecipe(){
     const st=r.steps[stepIdx];
     // Hands-on steps (chopping, building, quick stovetop work) have no countdown, only an estimate.
     if(settings.skipTimers||st.timer===false){
-      card.innerHTML=head+`
+      card.innerHTML=top+`
         <div class="progress"><span>Step ${stepIdx+1} of ${r.steps.length} · ${st.prep?`prep ahead · ${stepPrepText(st)}`:stepMin(r,stepIdx)?`about ${stepMin(r,stepIdx)} min${settings.skipTimers?"":" · no timer needed"}`:"no timer"}</span>${settings.skipTimers?"":`<span id="leftTxt">${progressText()}</span>`}</div>
         <div class="step-box">
           ${st.addon?`<span class="addon-step">Your option: ${st.addon}</span>`:""}
           ${st.prep?`<span class="addon-step">Prep ahead${st.overnight?": the night before":""}</span>`:""}
           <div class="step-name">${st.name}</div>
           <p class="step-desc">${st.desc}</p>
-          ${st.by?`<p class="step-choice">${stepChoiceText(r,st)} (${stepMin(r,stepIdx)} min). Change it above.</p>`:""}
+          ${st.by?`<p class="step-choice">${stepChoiceText(r,st)} (${stepMin(r,stepIdx)} min). Change it below.</p>`:""}
           ${stepNotesHtml(st)}
           ${checkInHtml(r)}
           <div class="controls"><button class="btn" id="skipBtn">Mark done, next step</button>${quickTimerHtml(st)}${readButtonHtml("readStepBtn","Read step")}</div>
         </div>`;
       $("skipBtn").onclick=completeStep;
     }else{
-      card.innerHTML=head+`
+      card.innerHTML=top+`
         <div class="progress"><span>Step ${stepIdx+1} of ${r.steps.length} · ${st.prep?"prep ahead · ":""}${stepMin(r,stepIdx)} min</span><span id="leftTxt">${progressText()}</span></div>
         <div class="bar"><span id="barFill" style="width:${progressPct()}%"></span></div>
         <div class="step-box">
@@ -1448,7 +1553,7 @@ function renderRecipe(){
           ${st.prep?`<span class="addon-step">Prep ahead${st.overnight?": the night before":""}</span>`:""}
           <div class="step-name">${st.name}</div>
           <p class="step-desc">${st.desc}</p>
-          ${st.by?`<p class="step-choice">${stepChoiceText(r,st)} (${stepMin(r,stepIdx)} min). Change it above.</p>`:""}
+          ${st.by?`<p class="step-choice">${stepChoiceText(r,st)} (${stepMin(r,stepIdx)} min). Change it below.</p>`:""}
           ${stepNotesHtml(st)}
           <div class="timer ${phase==="grace"?"grace":""}" id="timerDisp" aria-live="off">${fmt(secLeft)}</div>
           ${phase==="grace"?`<p class="grace-note">Time's up. Take up to 2 more minutes if you need them, then press Done. The next step starts on its own when this runs out.</p>`:""}
@@ -1465,10 +1570,13 @@ function renderRecipe(){
       $("resetBtn").onclick=resetTimer;
     }
   }
+  // While cooking, the step sits right under the title and everything else follows it.
+  card.insertAdjacentHTML("beforeend",cooking?`<div class="recipe-more">${details}</div>`:details);
+  if(!cooking)$("cookBtn").onclick=startCooking;
   if(dayOffset>=0)$("swapBtn").onclick=()=>setView("cat");
   if(canSpeak){
     $("readIngrBtn").onclick=()=>speak(`Ingredients for ${r.title}. ${r.ingredients.join(". ")}`);
-    if(!gathering&&stepIdx<r.steps.length)$("readStepBtn").onclick=()=>speak(stepSpeech(r,stepIdx));
+    if(showingStep)$("readStepBtn").onclick=()=>speak(stepSpeech(r,stepIdx));
   }
   bindFavButtons(card,renderRecipe);
   bindEditButtons(card);
@@ -1489,7 +1597,7 @@ function renderRecipe(){
   if(available.length)$("swapsBox").querySelector("summary").onclick=()=>{openPanels.swaps=!$("swapsBox").open};
   if(r.byo)$("byoBox").querySelector("summary").onclick=()=>{openPanels.byo=!$("byoBox").open};
   if(dietNotesFor(r).length)$("dietBox").querySelector("summary").onclick=()=>{openPanels.diet=!$("dietBox").open};
-  if(!gathering&&stepIdx<r.steps.length)bindQuickTimer();
+  if(showingStep)bindQuickTimer();
   card.querySelectorAll("input[data-addon]").forEach(c=>c.onchange=()=>toggleAddon(byId[r.id],c.dataset.addon,c.checked));
   card.querySelectorAll("button[data-choice]").forEach(b=>b.onclick=()=>pickChoice(r,b.dataset.choice,+b.dataset.idx));
   bindSwapControls(card);

@@ -26,6 +26,8 @@ function renderTour(){
   const step=TOUR_STEPS[tourStep],last=tourStep===TOUR_STEPS.length-1;
   clearTourHighlight();
   const target=step.target&&document.getElementById(step.target);
+  // On phones the tabs are at the bottom, so a card about a tab moves to the top to stay out of its way.
+  document.getElementById("tour").classList.toggle("top",!!target?.closest(".tabs"));
   if(target){target.classList.add("tour-target");target.scrollIntoView?.({block:"nearest"})}
   const box=document.getElementById("tourBox");
   box.innerHTML=`<p class="tour-count">${tourStep+1} of ${TOUR_STEPS.length}</p>
@@ -45,7 +47,7 @@ function renderTour(){
 }
 function startTour(){
   tourStep=0;tourReturnFocus=document.activeElement;
-  setView("week");
+  cooking=false;setView("week");
   document.getElementById("tour").hidden=false;
   renderTour();
 }
