@@ -10,7 +10,7 @@ const plainText=s=>s.replace(/&(amp|lt|gt|quot|#39);/g,m=>({"&amp;":"&","&lt;":"
 // Rebuild the cook's recipes inside RECIPES and every lookup made from it, then fix anything
 // that pointed at a recipe that was deleted or changed.
 function syncMyRecipes(){
-  const shownBefore=byId[planArr()[dayIdx]];
+  const shownBefore=byId[recipeIdOn(dayOffset)];
   for(let i=RECIPES.length-1;i>=0;i--){
     const r=RECIPES[i];
     if(!r.mine)continue;
@@ -28,8 +28,9 @@ function syncMyRecipes(){
   addonCache.clear();
   const cleaned=cleanOverrides(overrides);
   if(Object.keys(cleaned).length!==Object.keys(overrides).length){overrides=cleaned;saveOverrides()}
+  dateChanges=cleanDateChanges(dateChanges,id=>Object.hasOwn(byId,id),dateKey(START));saveDateChanges();
   for(const id of [...favorites])if(!byId[id]){favorites.delete(id);saveFavorites()}
-  if(byId[planArr()[dayIdx]]!==shownBefore)initDay(dayIdx);else renderDays();
+  if(byId[recipeIdOn(dayOffset)]!==shownBefore)initDay(dayOffset);else renderDays();
 }
 function persistMine(){saveMyEntries(myEntries)}
 function forgetMyRecipe(id){

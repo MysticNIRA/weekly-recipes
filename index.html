@@ -27,13 +27,20 @@ h1{font-size:20px;margin:0}
 .tabs{display:flex;background:var(--soft);border-radius:8px;padding:3px}
 .tabs button{border:none;background:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:14px;color:var(--muted)}
 .tabs button[aria-selected="true"]{background:var(--card);color:var(--text);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
-.days{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
-.days button{display:flex;flex-direction:column;align-items:center;min-width:62px;padding:6px 10px;border:1px solid var(--line);background:var(--card);border-radius:6px;cursor:pointer;font-size:13px}
-.days button .t{font-size:11px;color:var(--muted)}
-.days button.today .d::after{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--accent);margin-left:4px;vertical-align:middle}
-.days button.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.days button.active .t{color:inherit;opacity:.85}
-.days button.active.today .d::after{background:var(--accent-ink)}
+.days{margin-bottom:16px}
+.days-hint{font-size:13px;color:var(--muted);margin:0 0 6px}
+.days-list{display:flex;flex-direction:column;gap:4px}
+.days-list button{display:grid;grid-template-columns:7.5em 1fr auto;align-items:center;gap:4px 12px;width:100%;min-height:44px;padding:6px 12px;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:6px;cursor:pointer;font-size:14px;text-align:left}
+.days-list .d{font-weight:600}
+.days-list .d small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+.days-list .n{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.days-list .t{font-size:12px;color:var(--muted);text-align:right}
+.days-list button.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.days-list button.active small,.days-list button.active .t{color:inherit;opacity:.85}
+.days-list button.today:not(.active){border-color:var(--accent);box-shadow:inset 4px 0 0 var(--accent)}
+.days-list button.past:not(.active){opacity:.6}
+.days-nav{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:14px}
+@media (max-width:480px){.days-list button{grid-template-columns:6.5em 1fr}.days-list .t{grid-column:2;text-align:left}}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px}
 .rhead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
 .recipe-title{font-size:19px;margin:0 0 2px}
@@ -255,6 +262,9 @@ details.ingr li{margin:3px 0}
         <p class="settings-note">All recipes and Surprise me show only recipes that fit. Leave all unticked to see everything.</p>
         <label class="settings-row"><input type="checkbox" id="skipTimersChk"> Skip step timers — just check off steps at your own pace</label>
         <label class="settings-row"><input type="checkbox" id="cheapModeChk"> Plan this week with the cheapest recipes (any day you've swapped yourself stays as you set it)</label>
+        <div class="settings-row my-diet-row" role="radiogroup" aria-label="When I change a day's recipe"><span>When I change a day's recipe, change:</span>
+          <label><input type="radio" name="changeScope" value="date"> Just that date</label>
+          <label><input type="radio" name="changeScope" value="week"> That day every week</label></div>
         <label class="settings-row"><input type="checkbox" id="checkInChk"> Check in with a soft chime if a step without a timer takes much longer than usual</label>
         <label class="settings-row"><input type="checkbox" id="gatherFirstChk"> Start each recipe with a "get everything out" checklist of ingredients and tools</label>
         <label class="settings-row"><input type="checkbox" id="keepAwakeChk"> Keep the screen on while the app is open, so it doesn't lock mid-recipe</label>
@@ -316,6 +326,7 @@ details.ingr li{margin:3px 0}
 <script src="tour.js"></script>
 <script src="history.js"></script>
 <script src="notes.js"></script>
+<script src="plan-dates.js"></script>
 <script src="install.js"></script>
 <script>
 /* Common ingredient swaps, grouped by food category. `match` finds the ingredient lines a swap
@@ -455,8 +466,8 @@ const STAPLES=["salt","pepper","water","sugar"];
 const OVERRIDES_KEY="weekly-recipes-overrides";
 const SETTINGS_KEY="weekly-recipes-settings";
 
-// Keeps only day swaps (day 0–6 -> recipe id) for recipes that still exist, so a renamed or
-// removed recipe can't leave a day with nothing to show.
+// Every-week changes (weekday 0–6 -> recipe id), kept only for recipes that still exist, so a
+// renamed or removed recipe can't leave a day with nothing to show.
 function cleanOverrides(saved){
   const clean={};
   for(const [day,id] of Object.entries(saved&&typeof saved==="object"?saved:{}))
@@ -466,6 +477,11 @@ function cleanOverrides(saved){
 let overrides={};
 try{overrides=cleanOverrides(JSON.parse(localStorage.getItem(OVERRIDES_KEY)||"null"))}catch(e){}
 function saveOverrides(){try{localStorage.setItem(OVERRIDES_KEY,JSON.stringify(overrides))}catch(e){}}
+// Midnight today. Days on the plan are counted from here: 0 is today, 1 tomorrow, and so on.
+const START=new Date();START.setHours(0,0,0,0);
+let dateChanges={};
+try{dateChanges=cleanDateChanges(JSON.parse(localStorage.getItem(DATE_CHANGES_KEY)||"null"),id=>Object.hasOwn(byId,id),dateKey(START))}catch(e){}
+function saveDateChanges(){try{localStorage.setItem(DATE_CHANGES_KEY,JSON.stringify(dateChanges))}catch(e){}}
 
 const FAVORITES_KEY="weekly-recipes-favorites";
 let favorites=new Set();
@@ -488,7 +504,7 @@ const TEXT_SIZES={normal:"Normal",large:"Large",xl:"Extra large"};
 const THEMES={system:"Match my device",light:"Light",dark:"Dark"};
 const COLOR_MODES={default:"Standard",rg:"Red-green friendly (protanopia, deuteranopia)",by:"Blue-yellow friendly (tritanopia)"};
 const SPEECH_RATES={"0.75":"Slower","1":"Normal","1.25":"Faster"};
-const DEFAULT_SETTINGS={skipTimers:false,cheapMode:false,keepAwake:true,gatherFirst:true,checkIn:true,swaps:{},choices:{},addons:{},servings:{},scaleTipsHidden:[],myDiet:[],
+const DEFAULT_SETTINGS={skipTimers:false,cheapMode:false,changeEveryWeek:false,keepAwake:true,gatherFirst:true,checkIn:true,swaps:{},choices:{},addons:{},servings:{},scaleTipsHidden:[],myDiet:[],
   textSize:"normal",theme:"system",colorMode:"default",highContrast:false,readableFont:false,reduceMotion:false,autoRead:false,speechRate:1,voice:""};
 let settings={...DEFAULT_SETTINGS};
 try{const s=JSON.parse(localStorage.getItem(SETTINGS_KEY)||"null");if(s&&typeof s==="object")settings={...settings,...s}}catch(e){}
@@ -504,7 +520,7 @@ settings.textSize=oneOf(settings.textSize,TEXT_SIZES,"textSize");
 settings.theme=oneOf(settings.theme,THEMES,"theme");
 settings.colorMode=oneOf(settings.colorMode,COLOR_MODES,"colorMode");
 settings.speechRate=+oneOf(String(settings.speechRate),SPEECH_RATES,"speechRate");
-for(const key of ["highContrast","readableFont","reduceMotion","autoRead"])settings[key]=settings[key]===true;
+for(const key of ["highContrast","readableFont","reduceMotion","autoRead","changeEveryWeek"])settings[key]=settings[key]===true;
 settings.gatherFirst=settings.gatherFirst!==false;
 settings.checkIn=settings.checkIn!==false;
 if(typeof settings.voice!=="string")settings.voice="";
@@ -548,12 +564,29 @@ function saveSettings(){try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(set
 
 const CHEAP_PLAN=RECIPES.filter(r=>!r.mine).sort((a,b)=>a.cost-b.cost).slice(0,7).map(r=>r.id);
 function basePlan(){return settings.cheapMode?CHEAP_PLAN:DEFAULT_PLAN}
-function planArr(){const b=basePlan();return b.map((id,i)=>overrides[i]!==undefined?overrides[i]:id)}
+const dateAt=offset=>addDays(START,offset);
+const recipeIdOn=offset=>recipeOn(dateAt(offset),basePlan(),overrides,dateChanges);
+// The next 7 days' recipes by weekday, Monday first, for the shopping list and reminders.
+function planArr(){return DAYS.map((_,w)=>recipeIdOn((w-TODAY+7)%7))}
+// Puts a recipe on a day, just that date or every week, as Settings says.
+function planRecipe(offset,id){
+  planOn(dateAt(offset),id,settings.changeEveryWeek,basePlan(),overrides,dateChanges);
+  saveOverrides();saveDateChanges();
+}
+// "Today", "Tomorrow", or the weekday; the date names below add the month and day.
+const dayWord=(offset,long)=>offset===0?"Today":offset===1?"Tomorrow":(long?DAY_NAMES:DAYS)[weekdayOf(dateAt(offset))];
+const dateText=offset=>`${DAY_NAMES[weekdayOf(dateAt(offset))]}, ${monthDayText(dateAt(offset))}`;
+const shortDateText=offset=>`${DAYS[weekdayOf(dateAt(offset))]}, ${monthDayText(dateAt(offset))}`;
+const DAYS_AHEAD=56;
+// "today", "tomorrow", or "Tue, Nov 3", for buttons that put a recipe on a day.
+const cookOnText=offset=>offset<2?dayWord(offset).toLowerCase():shortDateText(offset);
+// All recipes can plan the next two weeks, plus a later day picked from the week list.
+const cookOnOffsets=()=>[...Array(14).keys(),...(cat.day>=14?[cat.day]:[])];
 
-let view="week",dayIdx=TODAY,stepIdx=0,timerId=null,secLeft=0,endsAt=0,phase="task",running=false,stepStatus=[];
+let view="week",dayOffset=0,daysShownFrom=0,stepIdx=0,timerId=null,secLeft=0,endsAt=0,phase="task",running=false,stepStatus=[];
 const secondsUntil=time=>Math.ceil((time-Date.now())/1000);
 let openPanels={ingr:null,swaps:false,byo:null,diet:false,scale:null};
-let cat={useMyDiet:true,surprise:null,q:"",sort:"quick",max:0,maxCost:0,maxCal:0,prep:"",diet:"",dietAdapt:"",cuisine:"",meal:"",type:"",show:"",pantry:"",day:TODAY};
+let cat={useMyDiet:true,surprise:null,q:"",sort:"quick",max:0,maxCost:0,maxCal:0,prep:"",diet:"",dietAdapt:"",cuisine:"",meal:"",type:"",show:"",pantry:"",day:0};
 
 /* ---------- choices ---------- */
 // A recipe's `choose` list offers ways to cook it (egg doneness, steak doneness...). A step with
@@ -772,7 +805,7 @@ function renderReminders(){
     try{localStorage.setItem(REMINDERS_KEY,JSON.stringify({date:todayStamp(),keys:remindersSeen}))}catch(e){}
     renderReminders();
   });
-  el.querySelectorAll("button[data-remind-swap]").forEach(b=>b.onclick=()=>{dayIdx=+b.dataset.remindSwap;setView("cat");window.scrollTo(0,0)});
+  el.querySelectorAll("button[data-remind-swap]").forEach(b=>b.onclick=()=>{setView("cat",(+b.dataset.remindSwap-TODAY+7)%7);window.scrollTo(0,0)});
 }
 function fmtMin(m){if(m<60)return m+" min";const h=Math.floor(m/60),r=m%60;return h+" hr"+(r?" "+r+" min":"")}
 function fmt(s){const m=Math.floor(s/60),ss=s%60;return `${m}:${ss.toString().padStart(2,"0")}`}
@@ -854,7 +887,7 @@ function swapRowHtml(s,extra){
     <span class="swap-meta">${saveText(pick.save)} · ${SWAP_KINDS[s.kind]}${extra?" · "+extra:""}</span>
   </div>`;
 }
-const cur=()=>withAddons(byId[planArr()[dayIdx]]);
+const cur=()=>withAddons(byId[recipeIdOn(dayOffset)]);
 const $=id=>document.getElementById(id);
 
 /* ---------- sound ---------- */
@@ -905,7 +938,8 @@ const stepSpeech=(r,i)=>`Step ${i+1} of ${r.steps.length}. ${r.steps[i].name}. $
 const readButtonHtml=(id,label)=>canSpeak?`<button class="btn secondary" id="${id}">🔊 ${label}</button>`:"";
 
 /* ---------- views ---------- */
-function setView(v){
+// catDay is the day All recipes plans for: the shown day, or today if that day has passed.
+function setView(v,catDay=Math.max(dayOffset,0)){
   view=v;
   $("tabWeek").setAttribute("aria-selected",v==="week");
   $("tabCat").setAttribute("aria-selected",v==="cat");
@@ -916,7 +950,7 @@ function setView(v){
   $("catView").hidden=v!=="cat";
   $("shopView").hidden=v!=="shop";
   $("mineView").hidden=v!=="mine";
-  if(v==="cat"){cat.day=dayIdx;renderCatalog()}
+  if(v==="cat"){cat.day=catDay;renderCatalog()}
   else if(v==="shop")renderShop();
   else if(v==="mine")renderMine();
   else{renderRecipe();renderChecklist()}
@@ -937,6 +971,10 @@ $("tabMine").onclick=()=>openTab("mine");
 /* ---------- settings ---------- */
 $("skipTimersChk").checked=settings.skipTimers;
 $("cheapModeChk").checked=settings.cheapMode;
+document.querySelectorAll('input[name="changeScope"]').forEach(radio=>{
+  radio.checked=(radio.value==="week")===settings.changeEveryWeek;
+  radio.onchange=()=>{settings.changeEveryWeek=radio.value==="week";saveSettings()};
+});
 function bindPanelToggle(btnId,panelId){
   $(btnId).onclick=()=>{
     const panel=$(panelId),open=panel.hidden;
@@ -1089,9 +1127,9 @@ $("gatherFirstChk").onchange=e=>{
 };
 // The recipe being cooked only starts over if cheap mode actually changes today's recipe.
 $("cheapModeChk").onchange=e=>{
-  const before=planArr()[dayIdx];
+  const before=recipeIdOn(dayOffset);
   settings.cheapMode=e.target.checked;saveSettings();
-  if(planArr()[dayIdx]!==before)initDay(dayIdx);else{renderDays();renderRecipe()}
+  if(recipeIdOn(dayOffset)!==before)initDay(dayOffset);else{renderDays();renderRecipe()}
   if(view==="shop")renderShop();else if(view==="cat")renderList();
 };
 
@@ -1248,9 +1286,11 @@ function wrapUpText(r){
 }
 
 /* ---------- week ---------- */
-function initDay(i){
+// offset is days from today (0 is today).
+function initDay(offset){
   stopSpeaking();
-  dayIdx=i;stepIdx=0;phase="task";running=false;clearInterval(timerId);
+  dayOffset=offset;daysShownFrom=mondayOffset(offset,TODAY);
+  stepIdx=0;phase="task";running=false;clearInterval(timerId);
   openPanels={ingr:null,swaps:false,byo:null,diet:false,scale:null};
   gathering=settings.gatherFirst;gathered=new Set();
   restartSteps();
@@ -1264,16 +1304,28 @@ function restartSteps(){
   startStep();
   renderDays();renderRecipe();renderChecklist();
 }
+// One Monday-to-Sunday week, each day with its date and recipe, so the days never move. Days
+// already past are faded and today is outlined; Next week looks further ahead.
 function renderDays(){
-  const el=$("days");el.innerHTML="";
-  const plan=planArr();
-  DAYS.forEach((d,i)=>{
-    const r=withAddons(byId[plan[i]]),b=document.createElement("button");
-    b.innerHTML=`<span class="d">${d}</span><span class="t">${cookTotal(r)?fmtMin(cookTotal(r)):"—"}</span>${prepTotal(r)?`<span class="t">+ ${prepText(r)} prep</span>`:""}`;
-    b.className=(i===dayIdx?"active ":"")+(i===TODAY?"today":"");
-    b.title=`${DAY_NAMES[i]}${i===TODAY?" (today)":""}: ${plainText(r.title)}`;
-    b.onclick=()=>initDay(i);el.appendChild(b);
-  });
+  const rows=[],thisWeek=-TODAY;
+  for(let offset=daysShownFrom;offset<daysShownFrom+7;offset++){
+    const r=withAddons(byId[recipeIdOn(offset)]),shown=offset===dayOffset;
+    const time=[cookTotal(r)?fmtMin(cookTotal(r)):"",prepTotal(r)?`+ ${prepText(r)} prep`:""].filter(Boolean).join(" ");
+    const when=offset===0?" · today":offset===1?" · tomorrow":"";
+    rows.push(`<button data-offset="${offset}" class="${[shown&&"active",offset===0&&"today",offset<0&&"past"].filter(Boolean).join(" ")}" ${shown?'aria-current="true"':""}>
+      <span class="d">${DAYS[weekdayOf(dateAt(offset))]}<small>${monthDayText(dateAt(offset))}${when}</small></span>
+      <span class="n">${r.title}</span><span class="t">${time}</span></button>`);
+  }
+  const ahead=daysShownFrom>thisWeek,more=daysShownFrom+7<DAYS_AHEAD;
+  const nextText=!ahead&&TODAY>=5?"Planning ahead? Next week →":"Next week →";
+  const el=$("days");
+  el.innerHTML=`<p class="days-hint">Tap a day to see its meal or change it.</p>
+    <div class="days-list">${rows.join("")}</div>
+    <div class="days-nav">${ahead?`<button class="link" id="daysEarlier">← ${daysShownFrom===thisWeek+7?"This week":"Previous week"}</button>`:"<span></span>"}
+      ${more?`<button class="link" id="daysLater">${nextText}</button>`:""}</div>`;
+  el.querySelectorAll("button[data-offset]").forEach(b=>b.onclick=()=>initDay(+b.dataset.offset));
+  if(ahead)$("daysEarlier").onclick=()=>{daysShownFrom-=7;renderDays()};
+  if(more)$("daysLater").onclick=()=>{daysShownFrom+=7;renderDays()};
   renderReminders();
 }
 // Overnight soaks are done the night before, so they never count toward "ready around".
@@ -1291,24 +1343,52 @@ function progressText(){
   const ready=new Date(Date.now()+secondsLeft()*1000).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
   return `About ${left} left · ready around ${ready}`;
 }
+// How the shown day's recipe differs from the usual week: changed for this date, for this
+// weekday every week, or not at all (kind null).
+function planChange(offset){
+  const date=dateAt(offset),key=dateKey(date),w=weekdayOf(date);
+  const kind=offset<0?null:Object.hasOwn(dateChanges,key)?"date":overrides[w]!==undefined?"week":null;
+  return {kind,date,key,w};
+}
+function changeNoteHtml({kind,w}){
+  const day=DAY_NAMES[w];
+  if(kind==="date")return `<p class="swapnote">Changed for ${dateText(dayOffset)} only.
+    <button class="link" id="everyWeekBtn">Make it every ${day}</button> ·
+    <button class="link" id="restoreBtn">Go back to ${byId[overrides[w]??basePlan()[w]].title}</button></p>`;
+  if(kind==="week")return `<p class="swapnote">Changed for every ${day}.
+    <button class="link" id="justThisBtn">Just this ${day}, ${monthDayText(dateAt(dayOffset))}</button> ·
+    <button class="link" id="restoreBtn">Go back to ${byId[basePlan()[w]].title} every ${day}</button></p>`;
+  return "";
+}
+// The recipe stays the same when a change only becomes every week or just this date, so
+// cooking carries on; going back to the usual recipe starts that recipe fresh.
+function bindChangeNote({kind,date,key,w}){
+  const saved=()=>{saveOverrides();saveDateChanges();renderDays();renderRecipe()};
+  if(kind==="date")$("everyWeekBtn").onclick=()=>{planOn(date,dateChanges[key],true,basePlan(),overrides,dateChanges);saved()};
+  if(kind==="week")$("justThisBtn").onclick=()=>{keepJustThisDate(date,basePlan(),overrides,dateChanges);saved()};
+  if(kind)$("restoreBtn").onclick=()=>{
+    if(kind==="date")delete dateChanges[key];else delete overrides[w];
+    saveOverrides();saveDateChanges();initDay(dayOffset);
+  };
+}
 function renderRecipe(){
   if(view!=="week")return;
   const r=cur(),card=$("recipeCard"),typingNote=noteFocus();
-  const swapped=overrides[dayIdx]!==undefined;
+  const change=planChange(dayOffset);
   const available=swapsFor(r);
   const head=`
     <div class="rhead">
       <div><h2 class="recipe-title">${r.title}</h2>
-      <p class="recipe-sub">${[DAY_NAMES[dayIdx],cuisineText(r),mealTypeText(r),timeText(r),`serves ${r.serves}`,r.steps.length?`${r.steps.length} steps`:"no steps",costText(r),caloriesText(r),lastCookedText(r.id)].filter(Boolean).join(" · ")}</p>
+      <p class="recipe-sub">${[dayOffset===0||dayOffset===1?`${dayWord(dayOffset)} (${dateText(dayOffset)})`:dateText(dayOffset),cuisineText(r),mealTypeText(r),timeText(r),`serves ${r.serves}`,r.steps.length?`${r.steps.length} steps`:"no steps",costText(r),caloriesText(r),lastCookedText(r.id)].filter(Boolean).join(" · ")}</p>
       ${dietLabelsHtml(r)?`<div class="labels">${dietLabelsHtml(r)}</div>`:""}</div>
-      <div class="controls">${favButtonHtml(r)}${r.mine?`<button class="btn secondary" data-edit="${r.id}">Edit recipe</button>`:""}<button class="btn secondary" id="swapBtn">Pick a different recipe</button></div>
+      <div class="controls">${favButtonHtml(r)}${r.mine?`<button class="btn secondary" data-edit="${r.id}">Edit recipe</button>`:""}${dayOffset>=0?`<button class="btn secondary" id="swapBtn">Pick a different recipe</button>`:""}</div>
     </div>
     ${r.desc?`<p class="dish-desc">${r.desc}</p>`:""}
     ${planAheadHtml(r)}
     ${r.safety?safetyNoteHtml(r.safety,"recipe-safety"):""}
     ${needsHalalMeat(r)?`<p class="halal-note">Halal-friendly: no pork or alcohol. Use halal-certified meat to keep it halal.</p>`:""}
     ${r.diet.includes("glutenfree")?`<p class="halal-note">Gluten-free as written. If you avoid gluten strictly, check the labels on broth, sauces, and spice blends, since some contain wheat.</p>`:""}
-    ${swapped?`<p class="swapnote">You swapped this in for ${DAY_NAMES[dayIdx]}. <button class="link" id="restoreBtn">Go back to ${byId[basePlan()[dayIdx]].title}</button></p>`:""}
+    ${changeNoteHtml(change)}
     ${servingsHtml(r)}
     <details class="ingr" id="ingrBox" ${(openPanels.ingr??(!gathering&&stepIdx===0&&phase==="task"&&secLeft===stepMin(r,0)*60))?"open":""}>
       <summary>Ingredients (${r.ingredients.length})</summary>
@@ -1340,7 +1420,7 @@ function renderRecipe(){
     card.innerHTML=head+(r.steps.length?`<p class="done-label">All steps done.</p><p class="done-note">${wrapUpText(r)}</p>`
       :`<p class="done-label">This recipe is just an ingredient list.</p><p class="done-note">Cook it your way. When you're done, put ingredients away and set your dishes aside to wash. Enjoy your meal!</p>`)
       +rateHtml(r)+`<button class="btn" id="againBtn">Start over</button>`;
-    $("againBtn").onclick=()=>initDay(dayIdx);
+    $("againBtn").onclick=()=>initDay(dayOffset);
     bindRate(r,()=>{renderRecipe();renderDays()});
   }else{
     const st=r.steps[stepIdx];
@@ -1385,7 +1465,7 @@ function renderRecipe(){
       $("resetBtn").onclick=resetTimer;
     }
   }
-  $("swapBtn").onclick=()=>setView("cat");
+  if(dayOffset>=0)$("swapBtn").onclick=()=>setView("cat");
   if(canSpeak){
     $("readIngrBtn").onclick=()=>speak(`Ingredients for ${r.title}. ${r.ingredients.join(". ")}`);
     if(!gathering&&stepIdx<r.steps.length)$("readStepBtn").onclick=()=>speak(stepSpeech(r,stepIdx));
@@ -1413,7 +1493,7 @@ function renderRecipe(){
   card.querySelectorAll("input[data-addon]").forEach(c=>c.onchange=()=>toggleAddon(byId[r.id],c.dataset.addon,c.checked));
   card.querySelectorAll("button[data-choice]").forEach(b=>b.onclick=()=>pickChoice(r,b.dataset.choice,+b.dataset.idx));
   bindSwapControls(card);
-  if(swapped)$("restoreBtn").onclick=()=>{delete overrides[dayIdx];saveOverrides();initDay(dayIdx)};
+  bindChangeNote(change);
   bindNoteBoxes(card);
   restoreNoteFocus(typingNote);
 }
@@ -1504,7 +1584,7 @@ function renderCatalog(){
       </select></label>
       <label>Dish type <select id="typeSel"><option value="">All types</option>${USED_DISH_TYPES.map(t=>`<option value="${t}">${DISH_TYPES[t]}</option>`).join("")}</select></label>
       <label>Cuisine <select id="cuisineSel"><option value="">All cuisines</option>${CUISINES.map(c=>`<option>${c}</option>`).join("")}</select></label>
-      <label>Cook on <select id="daySel">${DAY_NAMES.map((d,i)=>`<option value="${i}">${d}${i===TODAY?" (today)":""}</option>`).join("")}</select></label>
+      <label>Cook on <select id="daySel">${cookOnOffsets().map(o=>`<option value="${o}">${o<2?`${dayWord(o)} (${shortDateText(o)})`:shortDateText(o)}</option>`).join("")}</select></label>
     </div>
     ${chipGroupHtml("show","Which recipes",[["","All recipes"],["fav","♥ Favorites only"],["byo","Build your own"],["mine","My recipes"],["liked","👍 Make again"],["new","Not tried yet"]])}
     ${chipGroupHtml("meal","Meal",[["","Any meal"],...Object.entries(MEALS)])}
@@ -1628,7 +1708,7 @@ function renderList(){
   }
   L.innerHTML=withMissing.map(({r,missing})=>{
     const onDays=plan.map((id,i)=>id===r.id?DAYS[i]:null).filter(Boolean);
-    const already=plan[d]===r.id;
+    const already=recipeIdOn(d)===r.id;
     const pantryNote=haveTokens.length?(missing.length?`<p class="missing">Missing: ${missing.join(", ")}</p>`:`<p class="have-all">You have everything for this one.</p>`):"";
     const mine=activeSwapsFor(r).length,avail=swapsFor(r).length;
     const sticker=mine?`<span class="sticker mine">Uses your swaps (${mine})</span>`:avail?`<span class="sticker">${avail} ${avail===1?"swap":"swaps"} available</span>`:"";
@@ -1650,7 +1730,7 @@ function renderList(){
       </details>
       ${noteBoxHtml(r.id,"")}
       <div class="controls">
-        <button class="btn" data-id="${r.id}" ${already?"disabled":""}>${already?`Already planned for ${DAY_NAMES[d]}`:`Cook this on ${DAY_NAMES[d]}`}</button>
+        <button class="btn" data-id="${r.id}" ${already?"disabled":""}>${already?`Already planned for ${cookOnText(d)}`:`Cook this ${d<2?"":"on "}${cookOnText(d)}`}</button>
         ${favButtonHtml(r)}
         ${r.mine?`<button class="btn secondary" data-edit="${r.id}">Edit</button>`:""}
         <button class="btn secondary" data-copy="${r.id}">Copy and edit</button>
@@ -1661,8 +1741,8 @@ function renderList(){
   bindEditButtons(L);
   bindNoteBoxes(L);
   L.querySelectorAll("button[data-id]").forEach(b=>b.onclick=()=>{
-    overrides[d]=b.dataset.id;saveOverrides();
-    dayIdx=d;setView("week");initDay(d);window.scrollTo(0,0);
+    planRecipe(d,b.dataset.id);
+    setView("week");initDay(d);window.scrollTo(0,0);
   });
 }
 
@@ -1856,7 +1936,7 @@ function renderShop(){
 }
 
 renderSwapsPanel();
-initDay(TODAY);
+initDay(0);
 updateWakeLock();
 $("replayTourBtn").onclick=()=>{$("settingsPanel").hidden=true;$("settingsBtn").setAttribute("aria-expanded","false");startTour()};
 maybeStartTour();

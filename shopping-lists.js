@@ -189,18 +189,17 @@ function renderSavedList(){
   };
   if(list.recipes.length)$("planAgainBtn").onclick=()=>planListAgain(list);
 }
-// Puts a saved list's recipes back on their days. Recipes since deleted are skipped and named.
+// Puts a saved list's recipes back on their weekdays in the next 7 days (or every week, as
+// Settings says). Recipes since deleted are skipped and named.
 function planListAgain(list){
   const days=list.recipes.map(r=>DAYS[r.day]).join(", ");
   if(!confirm(`Put these recipes back on ${days}? This replaces what's planned on those days.`))return;
-  const shownBefore=planArr()[dayIdx],missing=[];
+  const shownBefore=recipeIdOn(dayOffset),missing=[];
   for(const r of list.recipes){
     if(!byId[r.id])missing.push(r.title);
-    else if(basePlan()[r.day]===r.id)delete overrides[r.day];
-    else overrides[r.day]=r.id;
+    else planRecipe((r.day-TODAY+7)%7,r.id);
   }
-  saveOverrides();
-  if(planArr()[dayIdx]!==shownBefore)initDay(dayIdx);else renderDays();
+  if(recipeIdOn(dayOffset)!==shownBefore)initDay(dayOffset);else renderDays();
   shopNotice=`Planned! These recipes are back on ${days}.${missing.length?` Not found anymore, so skipped: ${missing.map(escapeHtml).join(", ")}.`:""}`;
   renderShop();
 }
