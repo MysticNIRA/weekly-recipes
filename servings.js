@@ -122,3 +122,38 @@ function scaleRecipe(r,serves){
     ingredients:r.ingredients.map(l=>scaleIngredientLine(l,factor)),
     steps:r.steps.map(s=>({...s,desc:scaleStepText(s.desc,factor,nouns)}))};
 }
+
+/* What can go wrong when a recipe is cooked for more or fewer people than it was written for, and
+   how to handle it. Each tip names the steps it applies to (by index), or none when it is general. */
+const SCALE_MEAT=/\b(chicken|turkey|beef|pork|lamb|goat|sausages?|meat|meatballs?|steaks?|chops?|bacon|ham|fish|salmon|shrimp|prawns|cod|tilapia|catfish|thighs?|drumsticks?|wings?|brisket|ribs)\b/;
+const SCALE_HEAT=/\b(cook|cooks|fry|fries|brown|sear|roast|bake|grill|simmer|sauté|saute|broil|poach)\b/;
+const SCALE_PAN=/\b(fry|fries|fried|brown(?! (sugar|rice|lentils|bread))|sear|sauté|saute|pan-fry)\b/
+const SCALE_POT=/\b(boil|boiling|simmer|simmering)\b/;
+const SCALE_OVEN=/\b(bake|bakes|roast|roasts|broil)\b/
+function scalingTips(r,serves){
+  const factor=serves/r.serves,bigger=factor>1;
+  if(factor===1)return [];
+  const text=r.steps.map(s=>(s.name+" "+s.desc).toLowerCase());
+  const stepsWhere=(...res)=>text.flatMap((t,i)=>res.every(re=>re.test(t))&&!r.steps[i].prep?[i]:[]);
+  const tips=[];
+  const add=(id,title,body,steps)=>{if(steps===null||steps.length)tips.push({id,title,text:body,steps:steps||[]})};
+  add("meat","Check the meat is cooked through",
+    (bigger?"A fuller pan cooks more slowly, so the timer may end before the meat is done. ":"Smaller amounts cook faster, so start checking a few minutes early. ")+
+    "Chicken and turkey should reach 74°C (165°F), ground meat 71°C (160°F), and steaks, chops, and fish 63°C (145°F). No thermometer? Cut the thickest piece open: chicken has no pink and clear juices, and fish flakes easily.",
+    stepsWhere(SCALE_MEAT,SCALE_HEAT));
+  add("pan",bigger?"Cook in batches":"Watch the pan",
+    bigger?"If food is packed tight in the pan, it steams instead of browning and may not cook through. Cook in two or more rounds and keep finished food on a plate.":"Less food in the pan gets hot quickly and can burn. Turn the heat down a little and stir more often.",
+    stepsWhere(SCALE_PAN));
+  add("pot",bigger?"Give the pot more time and room":"Check early",
+    bigger?"A fuller pot takes longer to come to a boil. Start this step's timer once it is really bubbling, and use a pot that stays under about ¾ full.":"A smaller amount boils and thickens sooner. Check a few minutes before the timer ends so it doesn't boil dry.",
+    stepsWhere(SCALE_POT));
+  add("oven",bigger?"Use more pans, not a fuller one":"Use a smaller dish",
+    bigger?"Spread the food over two pans, or bake in two rounds, instead of piling it up. If two pans share the oven, swap their places halfway. Check that it is done when the timer ends.":"A small amount spread thin in a big pan cooks faster and dries out. Use a smaller dish if you have one, and check a few minutes before the timer ends.",
+    stepsWhere(SCALE_OVEN));
+  add("season","Taste as you season",
+    bigger?"Salt, spices, and chili can get too strong in a big batch. Add a little less than shown, taste, then add more.":"Small amounts of salt and spices are easy to overdo. Measure them rather than pouring, and taste before adding more.",
+    null);
+  if(factor>=3)add("batches","Think about two batches",
+    `That's more than 3 times the recipe. If your pots and pans are only as big as the recipe needs, cook it in two batches, one after the other.`,null);
+  return tips;
+}

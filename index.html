@@ -38,6 +38,12 @@ h1{font-size:20px;margin:0}
 .rhead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
 .recipe-title{font-size:19px;margin:0 0 2px}
 .recipe-sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+.scale-guide{background:var(--note);border-radius:6px;padding:10px 12px;font-size:14px;margin:0 0 14px}
+.scale-guide p{margin:0 0 6px}
+.scale-guide ul{margin:0 0 8px;padding-left:20px}
+.scale-guide li{margin-bottom:4px}
+.scale-guide summary{font-weight:700;cursor:pointer;min-height:28px}
+.scale-guide[open] summary{margin-bottom:6px}
 .swapnote{background:var(--note);border-radius:6px;padding:8px 10px;font-size:13px;margin:0 0 14px}
 .tour{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;padding:16px}
 /* Hidden always wins: a display rule (like the tour's display:flex) would otherwise keep it on screen. */
@@ -50,6 +56,11 @@ h1{font-size:20px;margin:0}
 .tour-target{position:relative;z-index:51;outline:3px solid var(--accent);outline-offset:3px;border-radius:6px;background:var(--card)}
 .rate-box{border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:0 0 14px}
 .rate-q{font-weight:600;margin:0 0 8px}
+.count-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.item.surprise{border:2px solid var(--accent)}
+.surprise-label{margin:0 0 8px;font-weight:600;color:var(--accent);font-size:14px}
+.my-diet-row{flex-wrap:wrap;gap:6px 14px}
+.my-diet-row label{display:flex;align-items:center;gap:6px}
 .reminder{display:flex;align-items:flex-start;gap:10px;background:var(--note);border-left:4px solid var(--accent);border-radius:6px;padding:10px 12px;margin:0 0 10px;font-size:14px}
 .reminder p{margin:0;flex:1}
 .reminder .controls{flex-shrink:0}
@@ -138,6 +149,9 @@ details.ingr li{margin:3px 0}
 .item details h4{font-size:13px;margin:10px 0 4px}
 .item details ul,.item details ol{margin:0;padding-left:20px}
 .item details li{margin:3px 0}
+.note-box .note-label{display:block;font-size:13px;color:var(--muted);margin:8px 0 4px}
+.note-box .note-text{width:100%;box-sizing:border-box;font:inherit;font-size:15px;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);resize:vertical}
+.note-box .note-status{font-size:12px;color:var(--muted);margin:4px 0 0}
 .item .cost .was{color:var(--muted);font-weight:400;font-size:13px}
 .swap-cat{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:8px}
 .swap-cat-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px}
@@ -191,6 +205,8 @@ details.ingr li{margin:3px 0}
 .shop-item.got .shop-name,.shop-item.got .shop-amt{text-decoration:line-through;color:var(--muted)}
 .shop-add{display:flex;gap:8px;margin:14px 0 0}
 .shop-add input{flex:1;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.new-list-label{margin:12px 0 0}
+.new-list{margin:6px 0 14px}
 .shop-save{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
 .saved-lists{margin-top:18px;padding-top:4px;border-top:1px solid var(--line)}
 .copy-box{display:block;width:100%;box-sizing:border-box;margin-top:8px;font:inherit;font-size:13px;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:inherit}
@@ -231,6 +247,12 @@ details.ingr li{margin:3px 0}
       <h3 style="margin:0 0 12px;font-size:14px">Settings</h3>
       <section class="settings-section" aria-labelledby="cookingHead">
         <h4 id="cookingHead">Cooking</h4>
+        <div class="settings-row my-diet-row" role="group" aria-label="My diet"><span>My diet:</span>
+          <label><input type="checkbox" data-mydiet="vegetarian"> Vegetarian</label>
+          <label><input type="checkbox" data-mydiet="vegan"> Vegan</label>
+          <label><input type="checkbox" data-mydiet="halal"> Halal-friendly</label>
+          <label><input type="checkbox" data-mydiet="glutenfree"> Gluten-free</label></div>
+        <p class="settings-note">All recipes and Surprise me show only recipes that fit. Leave all unticked to see everything.</p>
         <label class="settings-row"><input type="checkbox" id="skipTimersChk"> Skip step timers — just check off steps at your own pace</label>
         <label class="settings-row"><input type="checkbox" id="cheapModeChk"> Plan this week with the cheapest recipes (any day you've swapped yourself stays as you set it)</label>
         <label class="settings-row"><input type="checkbox" id="checkInChk"> Check in with a soft chime if a step without a timer takes much longer than usual</label>
@@ -257,7 +279,7 @@ details.ingr li{margin:3px 0}
         <button class="btn secondary" id="replayTourBtn">Show the welcome tour again</button>
         <h5>Install on your phone</h5>
         <div id="installHelp"></div>
-        <p class="settings-note" style="margin-left:0">App icon from <a href="https://iconscout.com" target="_blank" rel="noopener">IconScout</a>.</p>
+        <p class="settings-note" style="margin-left:0">App icon: <a href="https://iconscout.com/free-icon/free-cooking-icon_2037516" target="_blank" rel="noopener">Cooking icon on IconScout</a>.</p>
       </section>
     </div>
     <div id="weekView">
@@ -293,6 +315,7 @@ details.ingr li{margin:3px 0}
 <script src="shopping-lists.js"></script>
 <script src="tour.js"></script>
 <script src="history.js"></script>
+<script src="notes.js"></script>
 <script src="install.js"></script>
 <script>
 /* Common ingredient swaps, grouped by food category. `match` finds the ingredient lines a swap
@@ -465,7 +488,7 @@ const TEXT_SIZES={normal:"Normal",large:"Large",xl:"Extra large"};
 const THEMES={system:"Match my device",light:"Light",dark:"Dark"};
 const COLOR_MODES={default:"Standard",rg:"Red-green friendly (protanopia, deuteranopia)",by:"Blue-yellow friendly (tritanopia)"};
 const SPEECH_RATES={"0.75":"Slower","1":"Normal","1.25":"Faster"};
-const DEFAULT_SETTINGS={skipTimers:false,cheapMode:false,keepAwake:true,gatherFirst:true,checkIn:true,swaps:{},choices:{},addons:{},servings:{},
+const DEFAULT_SETTINGS={skipTimers:false,cheapMode:false,keepAwake:true,gatherFirst:true,checkIn:true,swaps:{},choices:{},addons:{},servings:{},scaleTipsHidden:[],myDiet:[],
   textSize:"normal",theme:"system",colorMode:"default",highContrast:false,readableFont:false,reduceMotion:false,autoRead:false,speechRate:1,voice:""};
 let settings={...DEFAULT_SETTINGS};
 try{const s=JSON.parse(localStorage.getItem(SETTINGS_KEY)||"null");if(s&&typeof s==="object")settings={...settings,...s}}catch(e){}
@@ -473,6 +496,8 @@ settings.swaps=cleanSwapSettings(settings.swaps);
 settings.choices=cleanChoiceSettings(settings.choices);
 settings.addons=cleanAddonSettings(settings.addons);
 settings.servings=cleanServingSettings(settings.servings);
+settings.scaleTipsHidden=Array.isArray(settings.scaleTipsHidden)?settings.scaleTipsHidden.filter(id=>byId[id]):[];
+settings.myDiet=Array.isArray(settings.myDiet)?MY_DIETS.filter(d=>settings.myDiet.includes(d)):[];
 // Saved settings come from the browser, so anything unexpected falls back to its default.
 const oneOf=(value,choices,key)=>Object.hasOwn(choices,value)?value:DEFAULT_SETTINGS[key];
 settings.textSize=oneOf(settings.textSize,TEXT_SIZES,"textSize");
@@ -527,8 +552,8 @@ function planArr(){const b=basePlan();return b.map((id,i)=>overrides[i]!==undefi
 
 let view="week",dayIdx=TODAY,stepIdx=0,timerId=null,secLeft=0,endsAt=0,phase="task",running=false,stepStatus=[];
 const secondsUntil=time=>Math.ceil((time-Date.now())/1000);
-let openPanels={ingr:null,swaps:false,byo:null,diet:false};
-let cat={q:"",sort:"quick",max:0,maxCost:0,maxCal:0,prep:"",diet:"",dietAdapt:"",cuisine:"",meal:"",type:"",show:"",pantry:"",day:TODAY};
+let openPanels={ingr:null,swaps:false,byo:null,diet:false,scale:null};
+let cat={useMyDiet:true,surprise:null,q:"",sort:"quick",max:0,maxCost:0,maxCal:0,prep:"",diet:"",dietAdapt:"",cuisine:"",meal:"",type:"",show:"",pantry:"",day:TODAY};
 
 /* ---------- choices ---------- */
 // A recipe's `choose` list offers ways to cook it (egg doneness, steak doneness...). A step with
@@ -612,7 +637,6 @@ function setServings(r,n){
 // "Cooking for [4] people", with a note on what changes when it isn't the recipe's own number.
 function servingsHtml(r){
   const base=byId[r.id],scaled=r.serves!==base.serves;
-  const panNote=base.tags.some(t=>["sweets","bread","pizza","oven","sheetpan"].includes(t))?" For a much bigger batch, use two pans rather than one bigger one, since baking times are for this pan size.":"";
   return `<div class="serves-row">
       <label for="servesInput">Cooking for</label>
       <button class="btn secondary serves-step" id="servesLess" aria-label="One person fewer" ${r.serves<=1?"disabled":""}>−</button>
@@ -621,7 +645,19 @@ function servingsHtml(r){
       <span>${r.serves===1?"person":"people"}</span>
       ${scaled?`<span class="recipe-sub" style="margin:0">written for ${base.serves} · <button class="link" id="servesReset">Back to ${base.serves}</button></span>`:""}
     </div>
-    ${scaled?`<p class="swapnote">Amounts are changed for ${r.serves} ${r.serves===1?"person":"people"}, in the ingredients and in the steps. Cooking times stay the same; a bigger pot may need a few extra minutes to come to a boil. Taste before adding more salt and spices.${panNote} <strong>Use your best judgment while cooking:</strong> if a pot or pan gets crowded, cook in smaller batches.</p>`:""}`;
+    ${scaled?scalingGuideHtml(r,base):""}`;
+}
+// What changes when cooking for a different number of people, and how to handle it. Open until the
+// cook presses "Got it"; after that it stays folded to one line for that recipe.
+function scalingGuideHtml(r,base){
+  const tips=scalingTips({...r,serves:base.serves},r.serves),who=`${r.serves} ${r.serves===1?"person":"people"}`;
+  const open=openPanels.scale??!settings.scaleTipsHidden.includes(r.id);
+  return `<details class="scale-guide" id="scaleBox" ${open?"open":""}>
+      <summary>Cooking for ${who} instead of ${base.serves}: ${tips.length} tips before you start</summary>
+      <p>Amounts are changed in the ingredients and the steps. Cooking times stay the same, so <strong>check that food is done, not just that the timer ended.</strong></p>
+      <ul>${tips.map(t=>`<li><strong>${t.title}.</strong> ${t.text}</li>`).join("")}</ul>
+      <button class="btn secondary" id="scaleGotIt">Got it, fold these away</button>
+    </details>`;
 }
 // "+1 step · +7 min · +$0.60/serving", measured against the recipe without this add-on.
 function addonMeta(r,a){
@@ -885,10 +921,18 @@ function setView(v){
   else if(v==="mine")renderMine();
   else{renderRecipe();renderChecklist()}
 }
-$("tabWeek").onclick=()=>setView("week");
-$("tabCat").onclick=()=>setView("cat");
-$("tabShop").onclick=()=>setView("shop");
-$("tabMine").onclick=()=>setView("mine");
+// Picking a tab closes Swaps and Settings, so the new tab isn't hidden under them.
+function openTab(v){
+  for(const [btnId,panelId] of [["swapsBtn","swapsPanel"],["settingsBtn","settingsPanel"]]){
+    $(panelId).hidden=true;
+    $(btnId).setAttribute("aria-expanded","false");
+  }
+  setView(v);
+}
+$("tabWeek").onclick=()=>openTab("week");
+$("tabCat").onclick=()=>openTab("cat");
+$("tabShop").onclick=()=>openTab("shop");
+$("tabMine").onclick=()=>openTab("mine");
 
 /* ---------- settings ---------- */
 $("skipTimersChk").checked=settings.skipTimers;
@@ -1027,6 +1071,15 @@ applyLook();
 
 $("checkInChk").checked=settings.checkIn;
 $("checkInChk").onchange=e=>{settings.checkIn=e.target.checked;saveSettings();startStep();renderRecipe()};
+// My diet: All recipes and Surprise me show only recipes that fit every diet ticked here.
+document.querySelectorAll("input[data-mydiet]").forEach(c=>{
+  c.checked=settings.myDiet.includes(c.dataset.mydiet);
+  c.onchange=()=>{
+    settings.myDiet=MY_DIETS.filter(d=>d===c.dataset.mydiet?c.checked:settings.myDiet.includes(d));
+    saveSettings();cat.useMyDiet=true;
+    if(view==="cat")renderList();
+  };
+});
 $("gatherFirstChk").checked=settings.gatherFirst;
 // Turning it off skips the checklist right away; turning it on applies the next time a recipe starts.
 $("gatherFirstChk").onchange=e=>{
@@ -1198,7 +1251,7 @@ function wrapUpText(r){
 function initDay(i){
   stopSpeaking();
   dayIdx=i;stepIdx=0;phase="task";running=false;clearInterval(timerId);
-  openPanels={ingr:null,swaps:false,byo:null,diet:false};
+  openPanels={ingr:null,swaps:false,byo:null,diet:false,scale:null};
   gathering=settings.gatherFirst;gathered=new Set();
   restartSteps();
 }
@@ -1240,7 +1293,7 @@ function progressText(){
 }
 function renderRecipe(){
   if(view!=="week")return;
-  const r=cur(),card=$("recipeCard");
+  const r=cur(),card=$("recipeCard"),typingNote=noteFocus();
   const swapped=overrides[dayIdx]!==undefined;
   const available=swapsFor(r);
   const head=`
@@ -1278,7 +1331,8 @@ function renderRecipe(){
       <summary>Swaps for this recipe (${activeSwapsFor(r).length} of ${available.length} on)</summary>
       <p class="recipe-sub" style="margin:6px 0 10px">Checking a swap turns it on for every recipe.</p>
       ${available.map(s=>swapRowHtml(s)).join("")}
-    </details>`:""}`;
+    </details>`:""}
+    ${noteBoxHtml(r.id,"ingr")}`;
   if(gathering){
     card.innerHTML=head+gatherHtml(r);
     bindGather(r);
@@ -1343,6 +1397,13 @@ function renderRecipe(){
   $("servesLess").onclick=()=>setServings(byId[r.id],r.serves-1);
   $("servesMore").onclick=()=>setServings(byId[r.id],r.serves+1);
   if($("servesReset"))$("servesReset").onclick=()=>setServings(byId[r.id],byId[r.id].serves);
+  if($("scaleBox")){
+    $("scaleBox").querySelector("summary").onclick=()=>{openPanels.scale=!$("scaleBox").open};
+    $("scaleGotIt").onclick=()=>{
+      if(!settings.scaleTipsHidden.includes(r.id))settings.scaleTipsHidden.push(r.id);
+      openPanels.scale=false;saveSettings();renderRecipe();
+    };
+  }
   // Remember only clicks: browsers also fire "toggle" when a details renders already open.
   $("ingrBox").querySelector("summary").onclick=()=>{openPanels.ingr=!$("ingrBox").open};
   if(available.length)$("swapsBox").querySelector("summary").onclick=()=>{openPanels.swaps=!$("swapsBox").open};
@@ -1353,6 +1414,8 @@ function renderRecipe(){
   card.querySelectorAll("button[data-choice]").forEach(b=>b.onclick=()=>pickChoice(r,b.dataset.choice,+b.dataset.idx));
   bindSwapControls(card);
   if(swapped)$("restoreBtn").onclick=()=>{delete overrides[dayIdx];saveOverrides();initDay(dayIdx)};
+  bindNoteBoxes(card);
+  restoreNoteFocus(typingNote);
 }
 // Picking a different doneness restarts the current step's timer if that step depends on it.
 function pickChoice(r,cid,idx){
@@ -1454,11 +1517,13 @@ function renderCatalog(){
     <div class="filters" style="margin-top:4px">
       <input type="text" id="pantryQ" placeholder="Ingredients you already have, comma-separated (e.g. garlic, rice, eggs)" aria-label="Ingredients you have" value="${cat.pantry.replace(/"/g,"&quot;")}">
     </div>
-    <p class="count" id="count"></p>
+    <p class="swapnote" id="myDietNote" hidden></p>
+    <div class="count-row"><p class="count" id="count"></p><button class="btn secondary" id="surpriseBtn">🎲 Surprise me</button></div>
     <div id="list"></div>
   </div>`;
   $("sort").value=cat.sort;$("daySel").value=cat.day;$("cuisineSel").value=cat.cuisine;$("typeSel").value=cat.type;
   $("q").oninput=e=>{cat.q=e.target.value;renderList()};
+  $("surpriseBtn").onclick=surpriseMe;
   $("sort").onchange=e=>{cat.sort=e.target.value;renderList()};
   $("cuisineSel").onchange=e=>{cat.cuisine=e.target.value;renderList()};
   $("typeSel").onchange=e=>{cat.type=e.target.value;renderList()};
@@ -1486,6 +1551,24 @@ function missingFor(r,haveTokens){
     return !haveTokens.some(h=>li.includes(h)||h.includes(li));
   });
 }
+const myDietOn=()=>cat.useMyDiet&&settings.myDiet.length>0;
+function renderMyDietNote(){
+  const el=$("myDietNote"),names=settings.myDiet.map(d=>DIET_NAMES[d]).join(", ");
+  el.hidden=!settings.myDiet.length;
+  if(!settings.myDiet.length)return;
+  el.innerHTML=cat.useMyDiet?`Showing recipes that fit your diet (${names}). <button class="link" id="myDietToggle">Show all recipes</button>`
+    :`Showing all recipes, not only your diet (${names}). <button class="link" id="myDietToggle">Only show my diet</button>`;
+  $("myDietToggle").onclick=()=>{cat.useMyDiet=!cat.useMyDiet;renderList()};
+}
+// Surprise me picks a random recipe from what the filters show, never the same one twice in a row.
+let shownIds=[];
+function surpriseMe(){
+  const choices=shownIds.length>1?shownIds.filter(id=>id!==cat.surprise):shownIds;
+  if(!choices.length)return;
+  cat.surprise=choices[Math.floor(Math.random()*choices.length)];
+  renderList();
+  $("count").scrollIntoView?.({block:"start"});
+}
 function renderList(){
   const words=cat.q.toLowerCase().split(/[\s,]+/).filter(Boolean);
   const haveTokens=cat.pantry.split(",").map(s=>s.trim().toLowerCase()).filter(Boolean);
@@ -1496,6 +1579,7 @@ function renderList(){
     if(cat.maxCost&&(r.cost===null||effectiveCost(r)>=cat.maxCost))return false;
     if(cat.maxCal&&!(caloriesFor(r).calories<cat.maxCal))return false;
     if(cat.diet&&!r.diet.includes(cat.diet)&&!(cat.dietAdapt&&canBeMade(r,cat.diet)))return false;
+    if(myDietOn()&&settings.myDiet.some(d=>!r.diet.includes(d)&&!(cat.dietAdapt&&canBeMade(r,d))))return false;
     if(cat.cuisine&&r.cuisine!==cat.cuisine&&r.style!==cat.cuisine)return false;
     if(cat.show==="fav"&&!favorites.has(r.id))return false;
     if(cat.show==="byo"&&!r.byo)return false;
@@ -1524,7 +1608,14 @@ function renderList(){
     if(cat.sort==="long")return cookTotal(b.r)-cookTotal(a.r)||a.r.title.localeCompare(b.r.title);
     return cookTotal(a.r)-cookTotal(b.r)||a.r.title.localeCompare(b.r.title);
   });
-  $("dietAdaptRow").hidden=!cat.diet;
+  $("dietAdaptRow").hidden=!cat.diet&&!myDietOn();
+  renderMyDietNote();
+  // A surprise pick goes to the top while it still fits the filters.
+  const pick=withMissing.findIndex(x=>x.r.id===cat.surprise);
+  if(pick>0)withMissing.unshift(...withMissing.splice(pick,1));
+  if(pick<0)cat.surprise=null;
+  shownIds=withMissing.map(x=>x.r.id);
+  $("surpriseBtn").disabled=!withMissing.length;
   $("count").textContent=`${withMissing.length} ${withMissing.length===1?"recipe":"recipes"}`;
   const d=cat.day,L=$("list"),plan=planArr();
   if(!withMissing.length){
@@ -1542,7 +1633,8 @@ function renderList(){
     const mine=activeSwapsFor(r).length,avail=swapsFor(r).length;
     const sticker=mine?`<span class="sticker mine">Uses your swaps (${mine})</span>`:avail?`<span class="sticker">${avail} ${avail===1?"swap":"swaps"} available</span>`:"";
     const cost=effectiveCost(r);
-    return `<article class="item">
+    return `<article class="item${r.id===cat.surprise?" surprise":""}">
+      ${r.id===cat.surprise?`<p class="surprise-label" role="status">🎲 How about this one? Press Surprise me again for another.</p>`:""}
       <div class="item-top"><h3>${r.title}</h3><span class="badges">${timeText(r)?`<span class="time">${timeText(r)}</span>`:""}${cost===null?"":`<span class="cost">${cost<r.cost?`<s class="was">${r.cost.toFixed(2)}</s> `:""}${fmtCost(cost)}</span>`}</span></div>
       <p class="meta">${[cuisineText(r),mealTypeText(r),`Serves ${r.serves}`,r.steps.length?`${r.steps.length} steps`:"no steps",caloriesText(r),onDays.length?`on your plan for ${onDays.join(", ")}`:""].filter(Boolean).join(" · ")}</p>
       ${r.desc?`<p class="dish-desc">${r.desc}</p>`:""}
@@ -1556,6 +1648,7 @@ function renderList(){
         ${dietNotesFor(r).length?`<h4>${dietNotesTitle(dietNotesFor(r))}</h4>${dietNotesBody(dietNotesFor(r))}`:""}
         ${r.steps.length?`<h4>Steps</h4><ol>${catalogStepsHtml(r)}</ol>`:""}
       </details>
+      ${noteBoxHtml(r.id,"")}
       <div class="controls">
         <button class="btn" data-id="${r.id}" ${already?"disabled":""}>${already?`Already planned for ${DAY_NAMES[d]}`:`Cook this on ${DAY_NAMES[d]}`}</button>
         ${favButtonHtml(r)}
@@ -1566,6 +1659,7 @@ function renderList(){
   }).join("");
   bindFavButtons(L,renderList);
   bindEditButtons(L);
+  bindNoteBoxes(L);
   L.querySelectorAll("button[data-id]").forEach(b=>b.onclick=()=>{
     overrides[d]=b.dataset.id;saveOverrides();
     dayIdx=d;setView("week");initDay(d);window.scrollTo(0,0);
@@ -1722,6 +1816,8 @@ function renderShop(){
     <h2 class="recipe-title">Shopping list</h2>
     <p class="recipe-sub">Everything you need for the days you pick, added up across recipes. Tap <strong>Have it</strong> for things already in your kitchen, and add anything else you need at the bottom.</p>
     ${shopNotice?`<p class="swapnote" role="status">${shopNotice}</p>`:""}
+    <p class="recipe-sub new-list-label">Need a list that isn't for these meals?</p>
+    ${newListFormHtml()}
     <div class="shop-days" role="group" aria-label="Days to shop for">
       ${DAYS.map((d,i)=>`<label title="${byId[plan[i]].title}"><input type="checkbox" data-day="${i}" ${shop.days.includes(i)?"checked":""}> ${d}: ${byId[plan[i]].title}</label>`).join("")}
     </div>
@@ -1742,6 +1838,7 @@ function renderShop(){
     </div>`:""}
     ${savedListsHtml()}
   </div>`;
+  bindNewListForm();
   el.querySelectorAll("input[data-day]").forEach(c=>c.onchange=()=>{
     const d=+c.dataset.day;
     shop.days=c.checked?[...shop.days,d]:shop.days.filter(x=>x!==d);

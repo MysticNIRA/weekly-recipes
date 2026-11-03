@@ -68,6 +68,27 @@ function saveCurrentList(name){
   savedLists.unshift(list);saveSavedLists();
   shopNotice=`Saved <strong>${escapeHtml(list.name)}</strong>. It's under Saved lists below.`;
 }
+// An empty list of the cook's own, not tied to any recipes ("Dollar store"). Returns it, or null when full.
+function createBlankList(name){
+  if(savedLists.length>=LIST_LIMITS.lists){shopNotice=`You have ${LIST_LIMITS.lists} saved lists. Delete an old one to start another.`;return null}
+  const list={id:newListKey("list-"),name:listText(name,LIST_LIMITS.name)||"My list",created:Date.now(),items:[],recipes:[],cost:null};
+  savedLists.unshift(list);saveSavedLists();
+  return list;
+}
+const newListFormHtml=()=>`<form class="shop-add new-list" id="newListForm">
+    <input type="text" maxlength="${LIST_LIMITS.name}" placeholder="Name it, e.g. Dollar store" aria-label="Name for a new list">
+    <button class="btn" type="submit">Start a new list</button>
+  </form>`;
+// Opens the new list with the cursor in "Add an item", so the next thing to do is type.
+function bindNewListForm(){
+  $("newListForm").onsubmit=e=>{
+    e.preventDefault();
+    const list=createBlankList($("newListForm").querySelector("input").value);
+    if(list){openListId=list.id;shopNotice=`Started <strong>${escapeHtml(list.name)}</strong>. Type an item and press Add (or Enter), one at a time. It saves as you go.`}
+    renderShop();
+    if(list){window.scrollTo(0,0);$("addListItemForm").querySelector("input").focus()}
+  };
+}
 // One row on a list; the cook's own items can be removed.
 function listRowHtml(row,checked,checkAttr,removeAttr){
   return `<div class="shop-item ${checked?"got":""}">
@@ -132,14 +153,14 @@ function renderSavedList(){
   const list=savedList(openListId),el=$("shopView");
   const got=list.items.filter(i=>i.checked).length;
   el.innerHTML=`<div class="card my-editor">
-    <button class="link" id="backToShopBtn">← Back to this week's list</button>
+    <button class="link" id="backToShopBtn">← Back to Shop</button>
     <label class="my-field">List name<input type="text" id="listNameInput" maxlength="${LIST_LIMITS.name}" value="${escapeHtml(list.name)}"></label>
     <p class="recipe-sub" style="margin-top:8px">Saved ${new Date(list.created).toLocaleDateString([],{month:"short",day:"numeric",year:"numeric"})} · ${got} of ${list.items.length} checked${list.cost?` · about $${list.cost.toFixed(2)} when saved`:""}</p>
     ${shopNotice?`<p class="swapnote" role="status">${shopNotice}</p>`:""}
     ${list.recipes.length?`<p class="recipe-sub">For: ${list.recipes.map(r=>`${DAYS[r.day]} ${escapeHtml(r.title)}`).join(" · ")}</p>
       <button class="btn secondary" id="planAgainBtn">Plan these recipes again</button>`:""}
     ${list.items.length?groupRows(list.items,SHOP_ORDER).map(([title,rows])=>`<section class="shop-section"><h3>${title}</h3>${rows.map(r=>listRowHtml(r,r.checked,"data-list-check","data-list-remove")).join("")}</section>`).join("")
-      :`<div class="empty">This list is empty. Add items below.</div>`}
+      :`<div class="empty">No items yet. Add your first one below.</div>`}
     ${addItemFormHtml("addListItemForm")}
     <div class="controls my-actions">
       <button class="btn secondary" id="copySavedBtn">Copy as text</button>
