@@ -51,7 +51,7 @@ h1{font-size:20px;margin:0}
 .days-list button.today:not(.active){border-color:var(--accent);box-shadow:inset 4px 0 0 var(--accent)}
 .days-list button.past:not(.active){opacity:.6}
 .days-nav{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:14px}
-@media (max-width:480px){.days-list button{grid-template-columns:6.5em 1fr}.days-list .t{grid-column:2;text-align:left}}
+@media (max-width:480px){.days-list button{grid-template-columns:6.5em minmax(0,1fr)}.days-list .t{grid-column:2;text-align:left}}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px}
 .rhead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
 .recipe-title{font-size:19px;margin:0 0 2px}
@@ -241,6 +241,26 @@ details.ingr li{margin:3px 0}
 .cook-bar{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin-bottom:12px;font-size:14px;color:var(--muted)}
 .cook-bar .link{font-size:14px}
 #reminders:empty{display:none}
+.search-row{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.search-row input{flex:1;min-width:0;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.filters-panel{border:1px solid var(--line);border-radius:8px;padding:12px;margin:0 0 12px}
+.filter-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.filter-grid label{display:flex;flex-direction:column;gap:3px;min-width:0;font-size:12px;color:var(--muted)}
+.filter-grid select{width:100%;min-width:0;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);font-size:14px}
+.about-numbers{margin:8px 0;font-size:13px;color:var(--muted)}
+.picking-for{background:var(--note);border-radius:6px;padding:8px 10px;font-size:14px;margin:0 0 10px}
+.sheet{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px}
+.sheet-box{background:var(--card);color:var(--text);border-radius:12px;padding:18px 20px;width:100%;max-width:420px;max-height:calc(100vh - 32px);overflow:auto;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+.sheet-box h2{font-size:18px;margin:0 0 4px}
+.sheet-box .days-list button{grid-template-columns:4.2em minmax(0,1fr)}
+.sheet-box .days-list button:disabled{opacity:.55;cursor:default}
+.toast{position:fixed;left:16px;right:16px;bottom:24px;z-index:55;display:flex;gap:14px;align-items:center;width:fit-content;max-width:520px;margin:0 auto;box-sizing:border-box;padding:10px 16px;border-radius:999px;background:var(--text);color:var(--bg);font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.2)}
+.toast .link{color:inherit;font-size:14px;font-weight:600}
+@media (max-width:760px){
+  .sheet{align-items:flex-end;padding:0}
+  .sheet-box{max-width:none;border-radius:14px 14px 0 0;padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}
+  .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+}
 .today-hero{padding:24px}
 .hero-when{margin:0 0 4px;font-size:13px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.04em}
 .hero-title{margin:0 0 6px;font-size:26px}
@@ -259,7 +279,7 @@ details.ingr li{margin:3px 0}
   #weekView.planning>#todayHero{order:-1;margin-bottom:16px}
   #weekView.planning>#reminders{order:-2}
 }
-@media (max-width:760px){.wrap{flex-direction:column}.side{width:100%;position:static}.rhead{flex-direction:column}}
+@media (max-width:760px){.wrap{flex-direction:column;align-items:stretch}.side{width:100%;position:static}.rhead{flex-direction:column}}
 @media (prefers-reduced-motion:reduce){.bar span{transition:none}}
 /* accessibility settings (colors are set from JS, see applyLook) */
 :root[data-text="large"] body{zoom:1.2}
@@ -339,6 +359,8 @@ details.ingr li{margin:3px 0}
     <div id="shopView" hidden></div>
     <div id="mineView" hidden></div>
   </div>
+  <div class="sheet" id="dayPicker" hidden><div class="sheet-box" id="pickerBox" role="dialog" aria-modal="true" aria-labelledby="pickerTitle"></div></div>
+  <div class="toast" id="toast" role="status" hidden></div>
   <div class="tour" id="tour" hidden><div class="tour-box" id="tourBox" role="dialog" aria-modal="true" aria-labelledby="tourTitle"></div></div>
   <aside class="side" id="side">
     <h3>Checklist</h3>
@@ -618,13 +640,11 @@ const shortDateText=offset=>`${DAYS[weekdayOf(dateAt(offset))]}, ${monthDayText(
 const DAYS_AHEAD=56;
 // "today", "tomorrow", or "Tue, Nov 3", for buttons that put a recipe on a day.
 const cookOnText=offset=>offset<2?dayWord(offset).toLowerCase():shortDateText(offset);
-// All recipes can plan the next two weeks, plus a later day picked from the week list.
-const cookOnOffsets=()=>[...Array(14).keys(),...(cat.day>=14?[cat.day]:[])];
 
 let view="week",dayOffset=0,daysShownFrom=0,stepIdx=0,timerId=null,secLeft=0,endsAt=0,phase="task",running=false,stepStatus=[];
 const secondsUntil=time=>Math.ceil((time-Date.now())/1000);
 let openPanels={ingr:null,swaps:false,byo:null,diet:false,scale:null};
-let cat={useMyDiet:true,surprise:null,q:"",sort:"quick",max:0,maxCost:0,maxCal:0,prep:"",diet:"",dietAdapt:"",cuisine:"",meal:"",type:"",show:"",pantry:"",day:0};
+let cat={useMyDiet:true,surprise:null,q:"",sort:"quick",max:0,maxCost:0,maxCal:0,prep:"",diet:"",dietAdapt:"",cuisine:"",meal:"",type:"",show:"",pantry:"",day:null,filtersOpen:false};
 
 /* ---------- choices ---------- */
 // A recipe's `choose` list offers ways to cook it (egg doneness, steak doneness...). A step with
@@ -976,8 +996,9 @@ const stepSpeech=(r,i)=>`Step ${i+1} of ${r.steps.length}. ${r.steps[i].name}. $
 const readButtonHtml=(id,label)=>canSpeak?`<button class="btn secondary" id="${id}">🔊 ${label}</button>`:"";
 
 /* ---------- views ---------- */
-// catDay is the day All recipes plans for: the shown day, or today if that day has passed.
-function setView(v,catDay=Math.max(dayOffset,0)){
+// catDay is the day All recipes is picking a recipe for, when a "Pick a different recipe" button
+// opened it; null when it was opened from its tab.
+function setView(v,catDay=null){
   view=v;
   $("tabWeek").setAttribute("aria-selected",v==="week");
   $("tabCat").setAttribute("aria-selected",v==="cat");
@@ -1419,7 +1440,7 @@ function bindChangeNote({kind,date,key,w}){
 // show the week beside the full recipe and its checklist.
 const phoneScreen=matchMedia("(max-width:760px)");
 const heroShown=()=>phoneScreen.matches&&!cooking;
-phoneScreen.addEventListener("change",()=>{if(view==="week"){renderRecipe();renderChecklist()}});
+phoneScreen.addEventListener("change",()=>{if(view==="week"){renderRecipe();renderChecklist()}else if(view==="cat")renderCatalog()});
 // Shows the parts of This week that belong to the screen in use. The checklist stays beside
 // the recipe while cooking, and on a computer while planning too.
 function applyWeekLayout(){
@@ -1463,7 +1484,7 @@ function renderHero(){
     ${changeNoteHtml(change)}
     <div class="controls">${cookButtonHtml(r)}${dayOffset>=0?`<button class="btn secondary" id="swapBtn">Pick a different recipe</button>`:""}</div>`;
   $("cookBtn").onclick=startCooking;
-  if(dayOffset>=0)$("swapBtn").onclick=()=>setView("cat");
+  if(dayOffset>=0)$("swapBtn").onclick=()=>setView("cat",dayOffset);
   bindChangeNote(change);
 }
 function renderRecipe(){
@@ -1573,7 +1594,7 @@ function renderRecipe(){
   // While cooking, the step sits right under the title and everything else follows it.
   card.insertAdjacentHTML("beforeend",cooking?`<div class="recipe-more">${details}</div>`:details);
   if(!cooking)$("cookBtn").onclick=startCooking;
-  if(dayOffset>=0)$("swapBtn").onclick=()=>setView("cat");
+  if(dayOffset>=0)$("swapBtn").onclick=()=>setView("cat",dayOffset);
   if(canSpeak){
     $("readIngrBtn").onclick=()=>speak(`Ingredients for ${r.title}. ${r.ingredients.join(". ")}`);
     if(showingStep)$("readStepBtn").onclick=()=>speak(stepSpeech(r,stepIdx));
@@ -1676,47 +1697,88 @@ function completeStep(){
 }
 
 /* ---------- catalogue ---------- */
+// Every filter, with the value that means "not filtering". Quick chips and Clear all use these.
+const FILTER_DEFAULTS={show:"",meal:"",diet:"",dietAdapt:"",max:0,maxCost:0,maxCal:0,prep:"",cuisine:"",type:"",pantry:""};
+// The three filters people reach for most stay one tap away; the rest fold away under Filters.
+const QUICK_FILTERS=[["max",30,"Under 30 min"],["maxCost",3,"Under $3/serving"],["show","fav","♥ Favorites"]];
+const filtersOn=()=>Object.keys(FILTER_DEFAULTS).filter(k=>k!=="dietAdapt"&&String(cat[k]).trim()!==String(FILTER_DEFAULTS[k])).length;
+const NUMBERS_NOTE="Times are the sum of each step's timer. Costs are rough U.S. average estimates per serving; your prices may vary. Calories are estimated from the ingredients, so treat them as a guide, not a nutrition label.";
+// Each filter: its key, full label, short label for a phone's dropdown, and its choices.
+const filterGroups=()=>[
+  ["show","Which recipes","Show",[["","All recipes"],["fav","♥ Favorites only"],["byo","Build your own"],["mine","My recipes"],["liked","👍 Make again"],["new","Not tried yet"]]],
+  ["meal","Meal","Meal",[["","Any meal"],...Object.entries(MEALS)]],
+  ["diet","Diet","Diet",[["","Any diet"],["vegetarian","Vegetarian"],["vegan","Vegan"],["halal","Halal-friendly"],["glutenfree","Gluten-free"]]],
+  ["max","Maximum cooking time","Time",[[0,"Any time"],[20,"Under 20 min"],[30,"Under 30 min"],[45,"Under 45 min"]]],
+  ["maxCost","Maximum cost per serving","Cost",[[0,"Any cost"],[2,"Under $2/serving"],[3,"Under $3/serving"],[5,"Under $5/serving"]]],
+  ["maxCal","Maximum calories per serving","Calories",[[0,"Any calories"],[400,"Under 400 cal"],[600,"Under 600 cal"],[800,"Under 800 cal"]]],
+  ["prep","Prep ahead (marinating or soaking)","Prep ahead",[["","Any prep"],["none","No prep ahead"],["30","Up to 30 min prep"],["120","Up to 2 hr prep"]]]];
+// Computers have room to show every choice as a chip. On a phone those rows wrap and fill the
+// screen, so each filter becomes a small dropdown in a two-column grid instead.
+function filterPanelHtml(){
+  const groups=filterGroups();
+  const sort=`<select id="sort"><option value="quick">Quickest first</option><option value="long">Longest first</option>
+    <option value="az">A to Z</option><option value="cal">Fewest calories</option></select>`;
+  const type=`<select id="typeSel"><option value="">All types</option>${USED_DISH_TYPES.map(t=>`<option value="${t}">${DISH_TYPES[t]}</option>`).join("")}</select>`;
+  const cuisine=`<select id="cuisineSel"><option value="">All cuisines</option>${CUISINES.map(c=>`<option>${c}</option>`).join("")}</select>`;
+  if(phoneScreen.matches)return `<div class="filter-grid">
+      ${[...groups.slice(1),groups[0]].map(([key,,short,choices])=>`<label>${short}<select data-key="${key}">
+        ${choices.map(([v,l])=>`<option value="${v}">${l}</option>`).join("")}</select></label>`).join("")}
+      <label>Cuisine${cuisine}</label><label>Dish type${type}</label><label>Sort${sort}</label>
+    </div>
+    <label class="settings-row" id="dietAdaptRow" hidden><input type="checkbox" id="dietAdaptChk"> Also show recipes that can be changed to fit</label>`;
+  return `<div class="filters"><label>Sort ${sort}</label><label>Dish type ${type}</label><label>Cuisine ${cuisine}</label></div>
+    ${groups.map(([key,label,,choices])=>chipGroupHtml(key,label,choices)+(key==="diet"
+      ?`<div id="dietAdaptRow" hidden>${chipGroupHtml("dietAdapt","Recipes that can be changed to fit",[["","Already fits"],["yes","Also show ones that can be changed to fit"]])}</div>`:"")).join("")}`;
+}
 function renderCatalog(){
   const el=$("catView");
   el.innerHTML=`
   <div class="card">
     <h2 class="recipe-title">All recipes</h2>
-    <p class="recipe-sub">Want something different? Pick a recipe and it replaces that day's meal. Times are the sum of each step's timer. Costs are rough U.S. average estimates per serving — your actual prices may vary. Calories are estimated from the ingredients, so treat them as a guide, not a nutrition label.</p>
-    <div class="filters">
-      <input type="search" id="q" placeholder="Search, e.g. soup, pasta, chicken, breakfast" aria-label="Search recipes" value="${cat.q.replace(/"/g,"&quot;")}">
-      <label>Sort <select id="sort">
-        <option value="quick">Quickest first</option>
-        <option value="long">Longest first</option>
-        <option value="az">A to Z</option>
-        <option value="cal">Fewest calories</option>
-      </select></label>
-      <label>Dish type <select id="typeSel"><option value="">All types</option>${USED_DISH_TYPES.map(t=>`<option value="${t}">${DISH_TYPES[t]}</option>`).join("")}</select></label>
-      <label>Cuisine <select id="cuisineSel"><option value="">All cuisines</option>${CUISINES.map(c=>`<option>${c}</option>`).join("")}</select></label>
-      <label>Cook on <select id="daySel">${cookOnOffsets().map(o=>`<option value="${o}">${o<2?`${dayWord(o)} (${shortDateText(o)})`:shortDateText(o)}</option>`).join("")}</select></label>
+    <p class="recipe-sub">Search, then press Add to plan to put a recipe on any day.</p>
+    <div class="search-row">
+      <input type="search" id="q" placeholder="Search, e.g. pasta, chicken" aria-label="Search recipes" value="${cat.q.replace(/"/g,"&quot;")}">
+      <button class="btn secondary" id="filtersBtn" aria-expanded="${cat.filtersOpen}" aria-controls="filtersPanel"></button>
     </div>
-    ${chipGroupHtml("show","Which recipes",[["","All recipes"],["fav","♥ Favorites only"],["byo","Build your own"],["mine","My recipes"],["liked","👍 Make again"],["new","Not tried yet"]])}
-    ${chipGroupHtml("meal","Meal",[["","Any meal"],...Object.entries(MEALS)])}
-    ${chipGroupHtml("diet","Diet",[["","Any diet"],["vegetarian","Vegetarian"],["vegan","Vegan"],["halal","Halal-friendly"],["glutenfree","Gluten-free"]])}
-    <div id="dietAdaptRow" hidden>${chipGroupHtml("dietAdapt","Recipes that can be changed to fit",[["","Already fits"],["yes","Also show ones that can be changed to fit"]])}</div>
-    ${chipGroupHtml("max","Maximum cooking time",[[0,"Any time"],[20,"Under 20 min"],[30,"Under 30 min"],[45,"Under 45 min"]])}
-    ${chipGroupHtml("maxCost","Maximum cost per serving",[[0,"Any cost"],[2,"Under $2/serving"],[3,"Under $3/serving"],[5,"Under $5/serving"]])}
-    ${chipGroupHtml("maxCal","Maximum calories per serving",[[0,"Any calories"],[400,"Under 400 cal"],[600,"Under 600 cal"],[800,"Under 800 cal"]])}
-    ${chipGroupHtml("prep","Prep ahead (marinating or soaking)",[["","Any prep"],["none","No prep ahead"],["30","Up to 30 min prep"],["120","Up to 2 hr prep"]])}
-    <div class="filters" style="margin-top:4px">
-      <input type="text" id="pantryQ" placeholder="Ingredients you already have, comma-separated (e.g. garlic, rice, eggs)" aria-label="Ingredients you have" value="${cat.pantry.replace(/"/g,"&quot;")}">
+    <div class="chips quick" role="group" aria-label="Quick filters">
+      ${QUICK_FILTERS.map(([key,value,label])=>`<button data-quick="${key}" data-value="${value}">${label}</button>`).join("")}
+    </div>
+    <div class="filters-panel" id="filtersPanel" ${cat.filtersOpen?"":"hidden"}>
+      ${filterPanelHtml()}
+      <div class="filters" style="margin-top:4px">
+        <input type="text" id="pantryQ" placeholder="Ingredients you have, e.g. rice, eggs" aria-label="Ingredients you have" value="${cat.pantry.replace(/"/g,"&quot;")}">
+      </div>
+      ${phoneScreen.matches?`<details class="about-numbers"><summary>About these numbers</summary><p>${NUMBERS_NOTE}</p></details>`:`<p class="recipe-sub">${NUMBERS_NOTE}</p>`}
+      <button class="link" id="clearFilters">Clear all filters</button>
     </div>
     <p class="swapnote" id="myDietNote" hidden></p>
+    <div id="pickingFor"></div>
     <div class="count-row"><p class="count" id="count"></p><button class="btn secondary" id="surpriseBtn">🎲 Surprise me</button></div>
     <div id="list"></div>
   </div>`;
-  $("sort").value=cat.sort;$("daySel").value=cat.day;$("cuisineSel").value=cat.cuisine;$("typeSel").value=cat.type;
+  $("sort").value=cat.sort;$("cuisineSel").value=cat.cuisine;$("typeSel").value=cat.type;
   $("q").oninput=e=>{cat.q=e.target.value;renderList()};
   $("surpriseBtn").onclick=surpriseMe;
+  $("filtersBtn").onclick=()=>{
+    cat.filtersOpen=!cat.filtersOpen;
+    $("filtersPanel").hidden=!cat.filtersOpen;$("filtersBtn").setAttribute("aria-expanded",cat.filtersOpen);
+  };
+  $("clearFilters").onclick=()=>{Object.assign(cat,FILTER_DEFAULTS);renderCatalog()};
+  el.querySelectorAll("button[data-quick]").forEach(b=>b.onclick=()=>{
+    const key=b.dataset.quick,value=typeof cat[key]==="number"?+b.dataset.value:b.dataset.value;
+    cat[key]=cat[key]===value?FILTER_DEFAULTS[key]:value;
+    renderList();
+  });
   $("sort").onchange=e=>{cat.sort=e.target.value;renderList()};
   $("cuisineSel").onchange=e=>{cat.cuisine=e.target.value;renderList()};
   $("typeSel").onchange=e=>{cat.type=e.target.value;renderList()};
-  $("daySel").onchange=e=>{cat.day=+e.target.value;renderList()};
   $("pantryQ").oninput=e=>{cat.pantry=e.target.value;renderList()};
+  el.querySelectorAll("select[data-key]").forEach(sel=>sel.onchange=()=>{
+    const key=sel.dataset.key;
+    cat[key]=typeof FILTER_DEFAULTS[key]==="number"?+sel.value:sel.value;
+    renderList();
+  });
+  if($("dietAdaptChk"))$("dietAdaptChk").onchange=e=>{cat.dietAdapt=e.target.checked?"yes":"";renderList()};
   el.querySelectorAll(".chips[data-key]").forEach(group=>{
     const key=group.dataset.key,numeric=typeof cat[key]==="number";
     group.querySelectorAll("button").forEach(b=>b.onclick=()=>{
@@ -1798,6 +1860,8 @@ function renderList(){
   });
   $("dietAdaptRow").hidden=!cat.diet&&!myDietOn();
   renderMyDietNote();
+  syncFilterControls();
+  renderPickingFor();
   // A surprise pick goes to the top while it still fits the filters.
   const pick=withMissing.findIndex(x=>x.r.id===cat.surprise);
   if(pick>0)withMissing.unshift(...withMissing.splice(pick,1));
@@ -1816,7 +1880,7 @@ function renderList(){
   }
   L.innerHTML=withMissing.map(({r,missing})=>{
     const onDays=plan.map((id,i)=>id===r.id?DAYS[i]:null).filter(Boolean);
-    const already=recipeIdOn(d)===r.id;
+    const already=d!==null&&recipeIdOn(d)===r.id;
     const pantryNote=haveTokens.length?(missing.length?`<p class="missing">Missing: ${missing.join(", ")}</p>`:`<p class="have-all">You have everything for this one.</p>`):"";
     const mine=activeSwapsFor(r).length,avail=swapsFor(r).length;
     const sticker=mine?`<span class="sticker mine">Uses your swaps (${mine})</span>`:avail?`<span class="sticker">${avail} ${avail===1?"swap":"swaps"} available</span>`:"";
@@ -1838,7 +1902,8 @@ function renderList(){
       </details>
       ${noteBoxHtml(r.id,"")}
       <div class="controls">
-        <button class="btn" data-id="${r.id}" ${already?"disabled":""}>${already?`Already planned for ${cookOnText(d)}`:`Cook this ${d<2?"":"on "}${cookOnText(d)}`}</button>
+        ${d===null?"":`<button class="btn" data-id="${r.id}" ${already?"disabled":""}>${already?`Already on ${cookOnText(d)}`:`Add to ${cookOnText(d)}`}</button>`}
+        <button class="btn${d===null?"":" secondary"}" data-add="${r.id}">${d===null?"Add to plan":"Another day…"}</button>
         ${favButtonHtml(r)}
         ${r.mine?`<button class="btn secondary" data-edit="${r.id}">Edit</button>`:""}
         <button class="btn secondary" data-copy="${r.id}">Copy and edit</button>
@@ -1848,12 +1913,92 @@ function renderList(){
   bindFavButtons(L,renderList);
   bindEditButtons(L);
   bindNoteBoxes(L);
+  L.querySelectorAll("button[data-add]").forEach(b=>b.onclick=()=>openDayPicker(b.dataset.add,b));
   L.querySelectorAll("button[data-id]").forEach(b=>b.onclick=()=>{
     planRecipe(d,b.dataset.id);
     setView("week");initDay(d);window.scrollTo(0,0);
   });
 }
 
+// The quick chips, the Filters groups, and the Filters button all show the same filters.
+function syncFilterControls(){
+  const n=filtersOn();
+  $("filtersBtn").textContent=n?`Filters · ${n} on`:"Filters";
+  $("catView").querySelectorAll("button[data-quick]").forEach(b=>b.setAttribute("aria-pressed",String(cat[b.dataset.quick])===b.dataset.value));
+  $("catView").querySelectorAll(".chips[data-key]").forEach(group=>group.querySelectorAll("button").forEach(b=>
+    b.setAttribute("aria-pressed",String(cat[group.dataset.key])===b.dataset.value)));
+  $("catView").querySelectorAll("select[data-key]").forEach(sel=>{sel.value=String(cat[sel.dataset.key])});
+  if($("dietAdaptChk"))$("dietAdaptChk").checked=cat.dietAdapt==="yes";
+}
+function renderPickingFor(){
+  const el=$("pickingFor");
+  el.innerHTML=cat.day===null?"":`<p class="picking-for" role="status">Picking a recipe for <strong>${dateText(cat.day)}</strong>.
+    <button class="link" id="pickingCancel">Browse without a day</button></p>`;
+  if(cat.day!==null)$("pickingCancel").onclick=()=>{cat.day=null;renderList()};
+}
+
+/* ---------- Add to plan ---------- */
+// Like adding a song to a playlist: pick a recipe first, then the day it goes on.
+let picker={id:null,weekFrom:0,returnFocus:null};
+function openDayPicker(id,from){
+  picker={id,weekFrom:mondayOffset(0,TODAY),returnFocus:from};
+  $("dayPicker").hidden=false;
+  renderDayPicker();
+  $("dayPicker").querySelector("button[data-pick]:not(:disabled)")?.focus();
+}
+function closeDayPicker(){
+  $("dayPicker").hidden=true;
+  picker.returnFocus?.focus?.();
+}
+function renderDayPicker(){
+  const r=byId[picker.id],rows=[],thisWeek=mondayOffset(0,TODAY);
+  for(let offset=picker.weekFrom;offset<picker.weekFrom+7;offset++){
+    const planned=byId[recipeIdOn(offset)],same=planned.id===r.id,past=offset<0;
+    const when=offset===0?"<small>today</small>":offset===1?"<small>tomorrow</small>":"";
+    rows.push(`<button data-pick="${offset}" class="${past?"past":""}" ${past||same?"disabled":""}>
+      <span class="d">${DAYS[weekdayOf(dateAt(offset))]}<small>${monthDayText(dateAt(offset))}</small>${when}</span>
+      <span class="n">${same?"Already on this day":planned.title}</span></button>`);
+  }
+  const ahead=picker.weekFrom>thisWeek,more=picker.weekFrom+7<DAYS_AHEAD;
+  $("pickerBox").innerHTML=`<h2 id="pickerTitle">Add ${r.title} to…</h2>
+    <p class="recipe-sub">Tap a day. ${settings.changeEveryWeek?"It replaces that day's meal every week.":"It replaces that day's meal for that date only."}</p>
+    <div class="days-list">${rows.join("")}</div>
+    <div class="days-nav">${ahead?`<button class="link" id="pickerEarlier">← ${picker.weekFrom===thisWeek+7?"This week":"Previous week"}</button>`:"<span></span>"}
+      ${more?`<button class="link" id="pickerLater">Next week →</button>`:""}</div>
+    <div class="controls"><button class="btn secondary" id="pickerClose">Cancel</button></div>`;
+  $("pickerBox").querySelectorAll("button[data-pick]").forEach(b=>b.onclick=()=>addToDay(+b.dataset.pick));
+  if(ahead)$("pickerEarlier").onclick=()=>{picker.weekFrom-=7;renderDayPicker()};
+  if(more)$("pickerLater").onclick=()=>{picker.weekFrom+=7;renderDayPicker()};
+  $("pickerClose").onclick=closeDayPicker;
+}
+// Puts the recipe on the day and stays in All recipes, with a moment to undo it.
+function addToDay(offset){
+  const before={everyWeek:{...overrides},dates:{...dateChanges}},title=byId[picker.id].title;
+  const refresh=shownBefore=>{
+    if(recipeIdOn(dayOffset)!==shownBefore)initDay(dayOffset);else renderDays();
+    if(view==="cat")renderList();
+  };
+  const shownBefore=recipeIdOn(dayOffset);
+  planRecipe(offset,picker.id);
+  closeDayPicker();
+  refresh(shownBefore);
+  showToast(`${title} added to ${dateText(offset)} ✓`,()=>{
+    const shownNow=recipeIdOn(dayOffset);
+    overrides=before.everyWeek;dateChanges=before.dates;saveOverrides();saveDateChanges();
+    refresh(shownNow);
+  });
+}
+$("dayPicker").onclick=e=>{if(e.target===$("dayPicker"))closeDayPicker()};
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("dayPicker").hidden)closeDayPicker()});
+// A short confirmation at the bottom of the screen, with Undo, that goes away on its own.
+let toastTimer=null;
+function showToast(text,undo){
+  const el=$("toast");
+  el.innerHTML=`<span>${text}</span>${undo?`<button class="link" id="toastUndo">Undo</button>`:""}`;
+  el.hidden=false;
+  if(undo)$("toastUndo").onclick=()=>{undo();el.hidden=true};
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>{el.hidden=true},6000);
+}
 /* ---------- shopping list ---------- */
 // Builds one combined list from the planned recipes. Each ingredient line is split into single
 // ingredients, named by the recipe's pantry keyword when one matches, and amounts that share a
