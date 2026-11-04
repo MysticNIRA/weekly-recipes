@@ -30,7 +30,8 @@ self.addEventListener("fetch",event=>{
   event.respondWith((async()=>{
     const cache=await caches.open(CACHE);
     try{
-      const fresh=await fetch(request);
+      // no-cache: ask the site whether the file changed, rather than reusing the browser's 10-minute copy.
+      const fresh=await fetch(request,{cache:"no-cache"});
       if(fresh.ok)cache.put(request,fresh.clone());
       return fresh;
     }catch(offline){

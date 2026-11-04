@@ -1008,7 +1008,9 @@ const readButtonHtml=(id,label)=>canSpeak?`<button class="btn secondary" id="${i
 /* ---------- views ---------- */
 // catDay is the day All recipes is picking a recipe for, when a "Pick a different recipe" button
 // opened it; null when it was opened from its tab.
+// Changing screens stops anything being read aloud, so audio from one screen never stacks on the next.
 function setView(v,catDay=null){
+  stopSpeaking();
   view=v;
   $("tabWeek").setAttribute("aria-selected",v==="week");
   $("tabCat").setAttribute("aria-selected",v==="cat");
@@ -1049,6 +1051,7 @@ function bindPanelToggle(btnId,panelId){
   $(btnId).onclick=()=>{
     const panel=$(panelId),open=panel.hidden;
     panel.hidden=!open;
+    if(!open)stopSpeaking();// closing a panel stops its Test voice or anything else being read
     $(btnId).setAttribute("aria-expanded",String(open));
   };
 }
