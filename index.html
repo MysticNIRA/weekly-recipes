@@ -1282,7 +1282,7 @@ function bindGather(r){
     renderRecipe();
   });
   $("gatherDoneBtn").onclick=()=>{
-    unlockAudio();gathering=false;startStep();renderRecipe();renderChecklist();
+    stopSpeaking();unlockAudio();gathering=false;startStep();renderRecipe();renderChecklist();
     if(settings.autoRead)speak(stepSpeech(r,0));
   };
   if(canSpeak)$("readGatherBtn").onclick=()=>speak(`Get everything out for ${r.title}. Ingredients: ${r.ingredients.join(". ")}. Tools: ${toolsFor(r).join(". ")}.`);
