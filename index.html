@@ -31,6 +31,8 @@ h1{font-size:20px;margin:0}
 /* Phones: the tabs sit at the bottom of the screen, within reach of a thumb. */
 @media (max-width:760px){
   body{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+  /* Scrolling something into view (like a tour highlight) stops above the tab bar, not under it. */
+  html{scroll-padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
   .tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;border-radius:0;padding:4px 4px calc(4px + env(safe-area-inset-bottom,0px));background:var(--card);border-top:1px solid var(--line);box-shadow:0 -2px 8px rgba(0,0,0,.08)}
   .tabs button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:54px;padding:4px 2px;font-size:12px}
   .tabs button[aria-selected="true"]{background:var(--soft);color:var(--accent);box-shadow:none}
@@ -978,20 +980,28 @@ function renderVoiceOptions(){
     ...englishVoices.map(v=>new Option(v.name,v.voiceURI)));
   sel.value=englishVoices.some(v=>v.voiceURI===settings.voice)?settings.voice:"";
 }
+// Each Read press counts up, so a check for silence from an earlier press (or one that was stopped) is ignored.
+let speechRun=0;
 // Chrome's Google voices go silent partway through long text, so each sentence is queued separately.
 function speak(text){
   if(!canSpeak)return;
   text=text.replace(/<br>/g,". ").replace(/&(amp|lt|gt|quot|#39);/g,m=>({"&amp;":"&","&lt;":"<","&gt;":">","&quot;":'"',"&#39;":"'"})[m]);
   speechSynthesis.cancel();
   const voice=chosenVoice();
+  let started=false;const run=++speechRun;
   for(const sentence of text.split(/(?<=[.!?])\s+/)){
     const u=new SpeechSynthesisUtterance(sentence);
     u.rate=settings.speechRate;
     if(voice){u.voice=voice;u.lang=voice.lang}
+    u.onstart=()=>{started=true};
     speechSynthesis.speak(u);
   }
+  // Some browsers (often on Linux) have no voices installed and stay silent without any error,
+  // so say so instead of leaving the cook wondering whether the button worked.
+  setTimeout(()=>{if(run===speechRun&&!started&&!speechSynthesis.speaking)showToast(NO_VOICE_MESSAGE)},2000);
 }
-function stopSpeaking(){if(canSpeak)speechSynthesis.cancel()}
+const NO_VOICE_MESSAGE="Nothing could be read aloud: this browser has no reading voice. Try Chrome or Edge, or a phone.";
+function stopSpeaking(){speechRun++;if(canSpeak)speechSynthesis.cancel()}
 const stepSpeech=(r,i)=>`Step ${i+1} of ${r.steps.length}. ${r.steps[i].name}. ${r.steps[i].desc} ${(r.steps[i].notes||[]).map(n=>`${n.label}: ${n.text}`).join(" ")}`;
 const readButtonHtml=(id,label)=>canSpeak?`<button class="btn secondary" id="${id}">🔊 ${label}</button>`:"";
 
@@ -1465,7 +1475,7 @@ function startCooking(){
 }
 // Back to planning. Timers keep running, and Continue cooking picks up where you left off.
 function backToWeek(){
-  cooking=false;
+  stopSpeaking();cooking=false;
   renderDays();renderRecipe();window.scrollTo(0,0);
 }
 function renderCookBar(){
@@ -1687,7 +1697,8 @@ function resetTimer(){
   secLeft=stepMin(cur(),stepIdx)*60;renderRecipe();
 }
 function completeStep(){
-  clearInterval(timerId);running=false;
+  // Moving on stops reading the old step, so two steps are never read over each other.
+  stopSpeaking();clearInterval(timerId);running=false;
   unlockAudio();
   stepStatus[stepIdx]="done";stepIdx++;phase="task";startStep();
   const r=cur();
@@ -2146,12 +2157,12 @@ function renderShop(){
   const sections=SHOP_ORDER.map(title=>[title,need.filter(i=>shopSection(i.name)===title),extras.filter(x=>x.section===title)])
     .filter(([,fromRecipes,own])=>fromRecipes.length||own.length);
   el.innerHTML=`<div class="card">
-    <h2 class="recipe-title">Shopping list</h2>
+    <div class="rhead"><h2 class="recipe-title">Shopping list</h2><button class="link" id="listTourBtn">How do lists work?</button></div>
     <p class="recipe-sub">Everything you need for the days you pick, added up across recipes. Tap <strong>Have it</strong> for things already in your kitchen, and add anything else you need at the bottom.</p>
     ${shopNotice?`<p class="swapnote" role="status">${shopNotice}</p>`:""}
     <p class="recipe-sub new-list-label">Need a list that isn't for these meals?</p>
     ${newListFormHtml()}
-    <div class="shop-days" role="group" aria-label="Days to shop for">
+    <div class="shop-days" id="shopDays" role="group" aria-label="Days to shop for">
       ${DAYS.map((d,i)=>`<label title="${byId[plan[i]].title}"><input type="checkbox" data-day="${i}" ${shop.days.includes(i)?"checked":""}> ${d}: ${byId[plan[i]].title}</label>`).join("")}
     </div>
     ${total?`<div class="shop-summary">
@@ -2172,6 +2183,7 @@ function renderShop(){
     ${savedListsHtml()}
   </div>`;
   bindNewListForm();
+  $("listTourBtn").onclick=()=>startTour(LIST_TOUR_STEPS,"shop");
   el.querySelectorAll("input[data-day]").forEach(c=>c.onchange=()=>{
     const d=+c.dataset.day;
     shop.days=c.checked?[...shop.days,d]:shop.days.filter(x=>x!==d);
