@@ -129,9 +129,9 @@ details.ingr li{margin:3px 0}
 .swap-search{width:100%;box-sizing:border-box;padding:10px 12px;margin-bottom:14px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font-size:16px}
 .swap-use-all{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:6px;border-radius:8px;background:var(--soft);font-size:15px;cursor:pointer}
 .swap-use-all input{width:18px;height:18px}
-/* A menu screen is its own screen: while it's open the rest of the page is hidden, so nothing behind it scrolls. */
-body:has(.menu-screen:not([hidden])) :is(#weekView,#catView,#shopView,#mineView,#side){display:none}
-body:has(.menu-screen:not([hidden])) .wrap{max-width:980px}
+/* Settings, Swaps and Programs are their own screens: while one is open the rest of the page is hidden, so nothing behind it scrolls. */
+body:has(.own-screen:not([hidden])) :is(#weekView,#catView,#shopView,#mineView,#side){display:none}
+body:has(.own-screen:not([hidden])) .wrap{max-width:980px}
 :is(#settingsBtn,#swapsBtn)[aria-expanded="true"]{background:var(--accent);color:var(--accent-ink)}
 /* Computers: the kinds on the left, the chosen one on the right. */
 @media (min-width:761px){
@@ -183,6 +183,27 @@ body:has(.menu-screen:not([hidden])) .wrap{max-width:980px}
 .my-hint{font-size:13px;color:var(--muted);margin:6px 0 0}
 .my-hint:empty,.my-error:empty{display:none}
 .my-error{font-size:13px;color:var(--accent);font-weight:600;margin:6px 0 0}
+/* Programs screen */
+#programsPanel{max-width:640px;margin:0 auto 16px;padding:20px 22px}
+.program-box{margin-top:18px}
+.program-box h4{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.program-days{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:2px;font-size:14px}
+.program-days li{display:grid;grid-template-columns:3em minmax(0,1fr);gap:8px}
+.program-days span{font-weight:600;color:var(--muted)}
+.program-label{display:block;font-size:14px;font-weight:600;margin-bottom:6px}
+.program-form-row{display:flex;gap:8px;flex-wrap:wrap}
+.program-form-row input{flex:1;min-width:12em;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font-size:16px}
+.program-form-row .btn{font-size:15px;padding:10px 16px}
+.program-card{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.program-card.in-use{border-color:var(--accent);box-shadow:inset 4px 0 0 var(--accent)}
+.program-card-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:16px}
+.in-use-tag{font-size:12px;font-weight:600;color:var(--accent)}
+.days-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.days-head .days-hint{margin:0}
+.days-head .btn{white-space:nowrap;flex-shrink:0}
+.program-meals{margin-bottom:10px;font-size:14px}
+.program-meals summary{cursor:pointer;color:var(--muted);margin-bottom:6px}
+.off-tag{display:inline-block;padding:0 6px;margin-right:4px;border-radius:999px;background:var(--note);color:var(--text);font-size:11px;font-weight:600;vertical-align:1px}
 .my-head{font-size:15px;margin:20px 0 4px}
 .my-step{border:1px solid var(--line);border-radius:8px;padding:4px 14px 12px;margin:12px 0}
 .my-step legend{font-size:13px;font-weight:600;color:var(--muted);padding:0 4px}
@@ -335,8 +356,9 @@ body:has(.menu-screen:not([hidden])) .wrap{max-width:980px}
         <button class="btn secondary" id="settingsBtn" aria-expanded="false" aria-controls="settingsPanel">Settings</button>
       </div>
     </div>
-    <div class="card menu-screen" id="swapsPanel" hidden role="dialog" aria-labelledby="swapsTitle"></div>
-    <div class="card menu-screen" id="settingsPanel" hidden role="dialog" aria-labelledby="settingsTitle">
+    <div class="card menu-screen own-screen" id="swapsPanel" hidden role="dialog" aria-labelledby="swapsTitle"></div>
+    <div class="card own-screen" id="programsPanel" hidden role="dialog" aria-labelledby="programsTitle"></div>
+    <div class="card menu-screen own-screen" id="settingsPanel" hidden role="dialog" aria-labelledby="settingsTitle">
       <div class="screen-top">
         <button class="link screen-back" id="settingsBack" hidden aria-label="Back to all settings">←</button>
         <h3 id="settingsTitle" tabindex="-1">Settings</h3>
@@ -435,6 +457,7 @@ body:has(.menu-screen:not([hidden])) .wrap{max-width:980px}
 <script src="history.js"></script>
 <script src="notes.js"></script>
 <script src="plan-dates.js"></script>
+<script src="programs.js"></script>
 <script src="install.js"></script>
 <script>
 /* Common ingredient swaps, grouped by food category. `match` finds the ingredient lines a swap
@@ -613,7 +636,7 @@ const THEMES={system:"Match my device",light:"Light",dark:"Dark"};
 const COLOR_MODES={default:"Standard",rg:"Red-green friendly (protanopia, deuteranopia)",by:"Blue-yellow friendly (tritanopia)"};
 const SPEECH_RATES={"0.75":"Slower","1":"Normal","1.25":"Faster"};
 const DEFAULT_SETTINGS={skipTimers:false,cheapMode:false,changeEveryWeek:false,keepAwake:true,gatherFirst:true,checkIn:true,swaps:{},choices:{},addons:{},servings:{},scaleTipsHidden:[],myDiet:[],
-  textSize:"normal",theme:"system",colorMode:"default",highContrast:false,readableFont:false,reduceMotion:false,autoRead:false,speechRate:1,voice:""};
+  textSize:"normal",theme:"system",colorMode:"default",highContrast:false,readableFont:false,reduceMotion:false,autoRead:false,speechRate:1,voice:"",program:""};
 let settings={...DEFAULT_SETTINGS};
 try{const s=JSON.parse(localStorage.getItem(SETTINGS_KEY)||"null");if(s&&typeof s==="object")settings={...settings,...s}}catch(e){}
 settings.swaps=cleanSwapSettings(settings.swaps);
@@ -632,6 +655,11 @@ for(const key of ["highContrast","readableFont","reduceMotion","autoRead","chang
 settings.gatherFirst=settings.gatherFirst!==false;
 settings.checkIn=settings.checkIn!==false;
 if(typeof settings.voice!=="string")settings.voice="";
+if(typeof settings.program!=="string")settings.program="";
+let programs=[];
+try{programs=cleanPrograms(JSON.parse(localStorage.getItem(PROGRAMS_KEY)||"null"),id=>Object.hasOwn(byId,id),DEFAULT_PLAN)}catch(e){}
+function savePrograms(){try{localStorage.setItem(PROGRAMS_KEY,JSON.stringify(programs))}catch(e){}}
+const activeProgram=()=>programs.find(p=>p.id===settings.program)||null;
 // Keeps only known swaps with a valid option. Older saves stored a plain list of swap ids.
 function cleanSwapSettings(saved){
   const entries=Array.isArray(saved)?saved.map(id=>[id,0]):Object.entries(saved&&typeof saved==="object"?saved:{});
@@ -671,7 +699,8 @@ function cleanServingSettings(saved){
 function saveSettings(){try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings))}catch(e){}}
 
 const CHEAP_PLAN=RECIPES.filter(r=>!r.mine).sort((a,b)=>a.cost-b.cost).slice(0,7).map(r=>r.id);
-function basePlan(){return settings.cheapMode?CHEAP_PLAN:DEFAULT_PLAN}
+// The week that repeats: the program in use, else the cheapest or the starter week.
+function basePlan(){return activeProgram()?.days??(settings.cheapMode?CHEAP_PLAN:DEFAULT_PLAN)}
 const dateAt=offset=>addDays(START,offset);
 const recipeIdOn=offset=>recipeOn(dateAt(offset),basePlan(),overrides,dateChanges);
 // The next 7 days' recipes by weekday, Monday first, for the shopping list and reminders.
@@ -1083,9 +1112,9 @@ function setView(v,catDay=null){
 }
 // Picking a tab closes Swaps and Settings, so the new tab isn't hidden under them.
 function openTab(v){
-  for(const [btnId,panelId] of [["swapsBtn","swapsPanel"],["settingsBtn","settingsPanel"]]){
+  for(const [btnId,panelId] of [["swapsBtn","swapsPanel"],["settingsBtn","settingsPanel"],["programsBtn","programsPanel"]]){
     $(panelId).hidden=true;
-    $(btnId).setAttribute("aria-expanded","false");
+    $(btnId)?.setAttribute("aria-expanded","false");
   }
   setView(v);
 }
@@ -1125,23 +1154,25 @@ function showMenuOrPage(menuId,backId,onePage){
 }
 const SCREENS={
   settings:{btn:"settingsBtn",panel:"settingsPanel",title:"settingsTitle",show:()=>{settingsPage=null;showSettingsPage("")},refresh:()=>showSettingsPage(settingsPage)},
-  swaps:{btn:"swapsBtn",panel:"swapsPanel",title:"swapsTitle",show:()=>{swapsPage="";$("swapSearch").value="";renderSwapsBody()},refresh:()=>renderSwapsBody()}
+  swaps:{btn:"swapsBtn",panel:"swapsPanel",title:"swapsTitle",show:()=>{swapsPage="";$("swapSearch").value="";renderSwapsBody()},refresh:()=>renderSwapsBody()},
+  programs:{btn:"programsBtn",panel:"programsPanel",title:"programsTitle",show:()=>renderPrograms(),refresh:()=>{}}
 };
 let scrollBeforeScreen=0;
 function openScreen(name){
   if(Object.values(SCREENS).every(s=>$(s.panel).hidden))scrollBeforeScreen=window.scrollY;
   stopSpeaking();
-  for(const [n,s] of Object.entries(SCREENS)){$(s.panel).hidden=n!==name;$(s.btn).setAttribute("aria-expanded",String(n===name))}
+  for(const [n,s] of Object.entries(SCREENS)){$(s.panel).hidden=n!==name;$(s.btn)?.setAttribute("aria-expanded",String(n===name))}
   SCREENS[name].show();
   window.scrollTo(0,0);
   $(SCREENS[name].title).focus({preventScroll:true});
 }
 function closeScreens(){
   stopSpeaking();// closing stops Test voice or anything else being read
-  for(const s of Object.values(SCREENS)){$(s.panel).hidden=true;$(s.btn).setAttribute("aria-expanded","false")}
+  for(const s of Object.values(SCREENS)){$(s.panel).hidden=true;$(s.btn)?.setAttribute("aria-expanded","false")}
   window.scrollTo(0,scrollBeforeScreen);// back where you were on the page
 }
-for(const [name,s] of Object.entries(SCREENS))$(s.btn).onclick=()=>$(s.panel).hidden?openScreen(name):closeScreens();
+// The Programs button is drawn with the week list, so renderDays binds it.
+for(const [name,s] of Object.entries(SCREENS))if($(s.btn))$(s.btn).onclick=()=>$(s.panel).hidden?openScreen(name):closeScreens();
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&Object.values(SCREENS).some(s=>!$(s.panel).hidden))closeScreens()});
 // Turning a tablet or resizing the window switches between the one- and two-column layouts.
 twoColumnScreens.addEventListener("change",()=>{for(const s of Object.values(SCREENS))if(!$(s.panel).hidden)s.refresh()});
@@ -1257,6 +1288,97 @@ function renderSwapsBody(){
   if(refocus)page.querySelector(refocus)?.focus();
 }
 function renderSwapsPanel(){if(!$("swapSearch"))buildSwapsScreen();renderSwapsBody()}
+
+// Programs: save the week shown in the week list as a program, and use any saved one.
+function shownWeekDays(){
+  const days=[];
+  for(let offset=daysShownFrom;offset<daysShownFrom+7;offset++)days[weekdayOf(dateAt(offset))]=recipeIdOn(offset);
+  return days;
+}
+const programDaysHtml=days=>`<ol class="program-days">${days.map((id,w)=>`<li><span>${DAYS[w]}</span>${byId[id].title}</li>`).join("")}</ol>`;
+function renderPrograms(errorText="",typed=""){
+  const program=activeProgram();
+  // Switching is the usual visit, so saved programs come first once there are any.
+  const saveBox=`<section class="program-box">
+      <h4>Save the week you're looking at · ${monthDayText(dateAt(daysShownFrom))}–${monthDayText(dateAt(daysShownFrom+6))}</h4>
+      ${programDaysHtml(shownWeekDays())}
+      <form id="programForm" novalidate>
+        <label for="programName" class="program-label">Program name</label>
+        <div class="program-form-row">
+          <input id="programName" maxlength="${PROGRAM_NAME_MAX}" placeholder="e.g. Strict week" autocomplete="off" value="${escapeHtml(typed)}" aria-describedby="programError">
+          <button class="btn" type="submit">Save and use it</button>
+        </div>
+        <p class="my-error" id="programError" role="alert">${errorText}</p>
+      </form>
+    </section>`,listBox=`<section class="program-box">
+      <h4>Your programs</h4>
+      ${programs.map(p=>`<div class="program-card${p===program?" in-use":""}">
+        <div class="program-card-head"><strong>${escapeHtml(p.name)}</strong>${p===program?`<span class="in-use-tag">✓ In use</span>`:""}</div>
+        <details class="program-meals"><summary>Show meals</summary>${programDaysHtml(p.days)}</details>
+        <div class="controls">
+          ${p===program?`<button class="btn secondary" data-stop-program>Stop using it</button>`:`<button class="btn" data-use-program="${p.id}">Use this program</button>`}
+          <button class="btn secondary" data-delete-program="${p.id}">Delete</button>
+        </div>
+      </div>`).join("")}
+    </section>`;
+  $("programsPanel").innerHTML=`
+    <div class="screen-top"><h3 id="programsTitle" tabindex="-1">Programs</h3><button class="btn secondary" id="programsClose">Close</button></div>
+    <p class="recipe-sub">A program is a week of meals that repeats every week. Changing a day just for that date, like a cheat meal, never changes the program.</p>
+    ${programs.length?listBox+saveBox:saveBox}`;
+  $("programsClose").onclick=closeScreens;
+  $("programForm").onsubmit=e=>{
+    e.preventDefault();
+    const name=$("programName").value,error=programNameError(name);
+    if(error){renderPrograms(error,name);$("programName").focus();return}
+    changePrograms(true,()=>{
+      const {program:saved,replaced}=saveProgram(programs,name,shownWeekDays(),"p"+Date.now().toString(36));
+      useProgram(saved);
+      return `“${escapeHtml(saved.name)}” ${replaced?"updated":"saved"} and in use · repeats every week`;
+    });
+  };
+  document.querySelectorAll("[data-use-program]").forEach(b=>b.onclick=()=>changePrograms(true,()=>{
+    const p=programs.find(x=>x.id===b.dataset.useProgram);
+    useProgram(p);
+    return `Using “${escapeHtml(p.name)}” · repeats every week`;
+  }));
+  document.querySelectorAll("[data-stop-program]").forEach(b=>b.onclick=()=>changePrograms(true,()=>{
+    settings.program="";
+    return "Stopped using a program · back to the starter week";
+  }));
+  document.querySelectorAll("[data-delete-program]").forEach(b=>b.onclick=()=>changePrograms(false,()=>{
+    const p=programs.find(x=>x.id===b.dataset.deleteProgram);
+    programs=programs.filter(x=>x!==p);
+    if(settings.program===p.id)settings.program="";
+    return `Deleted “${escapeHtml(p.name)}”`;
+  }));
+}
+function useProgram(p){
+  settings.program=p.id;
+  settings.cheapMode=false;$("cheapModeChk").checked=false;// a program replaces the cheapest week
+  startProgram(p.days,overrides,dateChanges);
+}
+// Makes a change to programs or the plan, saves it, and says what happened with Undo. Saving or
+// using a program goes back to the week so the change can be seen; deleting stays on Programs.
+function changePrograms(backToWeek,change){
+  const before={programs:JSON.parse(JSON.stringify(programs)),program:settings.program,cheapMode:settings.cheapMode,
+    everyWeek:{...overrides},dates:{...dateChanges}};
+  const save=shownBefore=>{
+    savePrograms();saveSettings();saveOverrides();saveDateChanges();
+    if(recipeIdOn(dayOffset)!==shownBefore)initDay(dayOffset);else{renderDays();renderRecipe()}
+    if(view==="shop")renderShop();
+    if(!$("programsPanel").hidden)renderPrograms();
+  };
+  const shownBefore=recipeIdOn(dayOffset);
+  const message=change();
+  if(backToWeek)closeScreens();
+  save(shownBefore);
+  showToast(message,()=>{
+    const shownNow=recipeIdOn(dayOffset);
+    programs=before.programs;settings.program=before.program;settings.cheapMode=before.cheapMode;
+    $("cheapModeChk").checked=before.cheapMode;overrides=before.everyWeek;dateChanges=before.dates;
+    save(shownNow);
+  });
+}
 $("skipTimersChk").onchange=e=>{
   settings.skipTimers=e.target.checked;saveSettings();
   clearInterval(timerId);running=false;phase="task";
@@ -1367,7 +1489,9 @@ $("gatherFirstChk").onchange=e=>{
 // The recipe being cooked only starts over if cheap mode actually changes today's recipe.
 $("cheapModeChk").onchange=e=>{
   const before=recipeIdOn(dayOffset);
-  settings.cheapMode=e.target.checked;saveSettings();
+  settings.cheapMode=e.target.checked;
+  if(settings.cheapMode)settings.program="";// the cheapest week replaces the program in use
+  saveSettings();
   if(recipeIdOn(dayOffset)!==before)initDay(dayOffset);else{renderDays();renderRecipe()}
   if(view==="shop")renderShop();else if(view==="cat")renderList();
 };
@@ -1547,26 +1671,30 @@ function restartSteps(){
   startStep();
   renderDays();renderRecipe();renderChecklist();
 }
+// A day differs from the program in use, e.g. a cheat meal. Past days are left alone.
+const offProgram=(program,offset)=>!!program&&offset>=0&&recipeIdOn(offset)!==program.days[weekdayOf(dateAt(offset))];
 // One Monday-to-Sunday week, each day with its date and recipe, so the days never move. Days
 // already past are faded and today is outlined; Next week looks further ahead.
 function renderDays(){
-  const rows=[],thisWeek=-TODAY;
+  const rows=[],thisWeek=-TODAY,program=activeProgram();
   for(let offset=daysShownFrom;offset<daysShownFrom+7;offset++){
     const r=withAddons(byId[recipeIdOn(offset)]),shown=offset===dayOffset;
     const time=[cookTotal(r)?fmtMin(cookTotal(r)):"",prepTotal(r)?`+ ${prepText(r)} prep`:""].filter(Boolean).join(" ");
     const when=offset===0?"<small>today</small>":offset===1?"<small>tomorrow</small>":"";
     rows.push(`<button data-offset="${offset}" class="${[shown&&"active",offset===0&&"today",offset<0&&"past"].filter(Boolean).join(" ")}" ${shown?'aria-current="true"':""}>
       <span class="d">${DAYS[weekdayOf(dateAt(offset))]}<small>${monthDayText(dateAt(offset))}</small>${when}</span>
-      <span class="n">${r.title}</span><span class="t">${time}</span></button>`);
+      <span class="n">${offProgram(program,offset)?`<span class="off-tag">Off program</span> `:""}${r.title}</span><span class="t">${time}</span></button>`);
   }
   const ahead=daysShownFrom>thisWeek,more=daysShownFrom+7<DAYS_AHEAD;
   const nextText=!ahead&&TODAY>=5?"Planning ahead? Next week →":"Next week →";
   const el=$("days");
-  el.innerHTML=`<p class="days-hint">Tap a day to see its meal or change it.</p>
+  el.innerHTML=`<div class="days-head"><p class="days-hint">${program?`Program: <strong>${escapeHtml(program.name)}</strong> · repeats every week`:"Tap a day to see its meal or change it."}</p>
+      <button class="btn secondary" id="programsBtn" aria-expanded="false" aria-controls="programsPanel">📋 Programs</button></div>
     <div class="days-list">${rows.join("")}</div>
     <div class="days-nav">${ahead?`<button class="link" id="daysEarlier">← ${daysShownFrom===thisWeek+7?"This week":"Previous week"}</button>`:"<span></span>"}
       ${more?`<button class="link" id="daysLater">${nextText}</button>`:""}</div>`;
   el.querySelectorAll("button[data-offset]").forEach(b=>b.onclick=()=>initDay(+b.dataset.offset));
+  $("programsBtn").onclick=()=>openScreen("programs");
   if(ahead)$("daysEarlier").onclick=()=>{daysShownFrom-=7;renderDays()};
   if(more)$("daysLater").onclick=()=>{daysShownFrom+=7;renderDays()};
   renderReminders();
@@ -1597,10 +1725,10 @@ function changeNoteHtml({kind,w}){
   const day=DAY_NAMES[w];
   if(kind==="date")return `<p class="swapnote">Changed for ${dateText(dayOffset)} only.
     <button class="link" id="everyWeekBtn">Make it every ${day}</button> ·
-    <button class="link" id="restoreBtn">Go back to ${byId[overrides[w]??basePlan()[w]].title}</button></p>`;
+    <button class="link" id="restoreBtn">${activeProgram()&&overrides[w]===undefined?"Back to your program: ":"Go back to "}${byId[overrides[w]??basePlan()[w]].title}</button></p>`;
   if(kind==="week")return `<p class="swapnote">Changed for every ${day}.
     <button class="link" id="justThisBtn">Just this ${day}, ${monthDayText(dateAt(dayOffset))}</button> ·
-    <button class="link" id="restoreBtn">Go back to ${byId[basePlan()[w]].title} every ${day}</button></p>`;
+    <button class="link" id="restoreBtn">${activeProgram()?"Back to your program: ":"Go back to "}${byId[basePlan()[w]].title} every ${day}</button></p>`;
   return "";
 }
 // The recipe stays the same when a change only becomes every week or just this date, so
