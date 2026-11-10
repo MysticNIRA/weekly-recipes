@@ -106,38 +106,41 @@ details.ingr li{margin:3px 0}
 .btn.secondary{background:var(--soft);color:var(--text)}
 .btn:disabled{opacity:.5;cursor:default}
 .fav-btn[aria-pressed="true"]{color:var(--accent);font-weight:600}
-/* Settings opens on a short menu of kinds of settings; each opens its own page (see showSettingsPage). */
-#settingsPanel{margin-bottom:16px}
-.settings-top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-.settings-top h3{margin:0;font-size:18px;flex:1}
-.settings-top h3:focus{outline:none}
-.settings-back{font-size:22px;text-decoration:none;font-weight:600;min-width:40px;min-height:40px}
-.settings-cats{display:flex;flex-direction:column;gap:8px}
-.settings-cat{display:flex;align-items:center;gap:14px;width:100%;min-height:64px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--text);cursor:pointer;text-align:left;font-size:16px}
-.settings-cat:hover{background:var(--soft)}
-.settings-cat-icon{font-size:24px;width:30px;text-align:center}
-.settings-cat>span:nth-child(2){flex:1;min-width:0}
-.settings-cat small{display:block;margin-top:2px;font-size:13px;color:var(--muted)}
-.settings-cat-go{font-size:22px;color:var(--muted)}
+/* Settings and Swaps are menu screens: a short menu of kinds, each opening its own page (see openScreen). */
+.menu-screen{margin-bottom:16px}
+.screen-top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.screen-top h3{margin:0;font-size:18px;flex:1}
+.screen-top h3:focus{outline:none}
+.screen-back{font-size:22px;text-decoration:none;font-weight:600;min-width:40px;min-height:40px}
+.screen-menu{display:flex;flex-direction:column;gap:8px}
+.screen-row{display:flex;align-items:center;gap:14px;width:100%;min-height:64px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--text);cursor:pointer;text-align:left;font-size:16px}
+.screen-row:hover{background:var(--soft)}
+.screen-row-icon{font-size:24px;width:30px;text-align:center}
+.screen-row>span:nth-child(2){flex:1;min-width:0}
+.screen-row small{display:block;margin-top:2px;font-size:13px;color:var(--muted)}
+.screen-row-go{font-size:22px;color:var(--muted)}
 .settings-install{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
 .settings-note{font-size:13px;color:var(--muted);margin:-4px 0 12px}
 .settings-row{display:flex;gap:10px;align-items:center;min-height:36px;margin-bottom:8px;font-size:15px}
 .settings-row input[type="checkbox"],.settings-row input[type="radio"]{width:18px;height:18px;flex-shrink:0}
 .settings-row select{max-width:100%;min-width:0;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);font-size:14px}
-.settings-section h4,.settings-install h4{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
-.settings-section h4:not(:first-child){margin-top:20px}
-/* Settings is its own screen: while it's open the rest of the page is hidden, so nothing behind it scrolls. */
-body:has(#settingsPanel:not([hidden])) :is(#weekView,#catView,#shopView,#mineView,#swapsPanel,#side){display:none}
-body:has(#settingsPanel:not([hidden])) .wrap{max-width:980px}
-#settingsBtn[aria-expanded="true"]{background:var(--accent);color:var(--accent-ink)}
-/* Computers: kinds of settings on the left, the chosen one on the right. */
+.screen-page h4,.settings-install h4{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.screen-page h4:not(:first-child){margin-top:20px}
+.swap-search{width:100%;box-sizing:border-box;padding:10px 12px;margin-bottom:14px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font-size:16px}
+.swap-use-all{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:6px;border-radius:8px;background:var(--soft);font-size:15px;cursor:pointer}
+.swap-use-all input{width:18px;height:18px}
+/* A menu screen is its own screen: while it's open the rest of the page is hidden, so nothing behind it scrolls. */
+body:has(.menu-screen:not([hidden])) :is(#weekView,#catView,#shopView,#mineView,#side){display:none}
+body:has(.menu-screen:not([hidden])) .wrap{max-width:980px}
+:is(#settingsBtn,#swapsBtn)[aria-expanded="true"]{background:var(--accent);color:var(--accent-ink)}
+/* Computers: the kinds on the left, the chosen one on the right. */
 @media (min-width:761px){
-  #settingsPanel{max-width:none;display:grid;grid-template-columns:280px minmax(0,1fr);gap:0 28px;align-items:start;padding:20px 24px}
-  .settings-top{grid-column:1/-1}
-  .settings-back,.settings-cat-go{display:none}
-  .settings-cat{min-height:56px}
-  .settings-cat[aria-current="page"]{border-color:var(--accent);background:var(--soft);box-shadow:inset 4px 0 0 var(--accent)}
-  .settings-section{border-left:1px solid var(--line);padding-left:28px;min-height:100%}
+  .menu-screen{display:grid;grid-template-columns:280px minmax(0,1fr);gap:0 28px;align-items:start;padding:20px 24px}
+  .screen-top,.swap-search{grid-column:1/-1}
+  .screen-back,.screen-row-go{display:none}
+  .screen-row{min-height:56px}
+  .screen-row[aria-current="page"]{border-color:var(--accent);background:var(--soft);box-shadow:inset 4px 0 0 var(--accent)}
+  .screen-page{border-left:1px solid var(--line);padding-left:28px;min-height:100%}
 }
 .side h3{font-size:14px;margin:0 0 10px}
 .check-item{display:flex;align-items:flex-start;gap:8px;padding:6px 0;font-size:13px;border-bottom:1px solid var(--line)}
@@ -332,26 +335,26 @@ body:has(#settingsPanel:not([hidden])) .wrap{max-width:980px}
         <button class="btn secondary" id="settingsBtn" aria-expanded="false" aria-controls="settingsPanel">Settings</button>
       </div>
     </div>
-    <div class="card" id="swapsPanel" hidden style="margin-bottom:16px"></div>
-    <div class="card" id="settingsPanel" hidden role="dialog" aria-labelledby="settingsTitle">
-      <div class="settings-top">
-        <button class="link settings-back" id="settingsBack" hidden aria-label="Back to all settings">←</button>
+    <div class="card menu-screen" id="swapsPanel" hidden role="dialog" aria-labelledby="swapsTitle"></div>
+    <div class="card menu-screen" id="settingsPanel" hidden role="dialog" aria-labelledby="settingsTitle">
+      <div class="screen-top">
+        <button class="link screen-back" id="settingsBack" hidden aria-label="Back to all settings">←</button>
         <h3 id="settingsTitle" tabindex="-1">Settings</h3>
         <button class="btn secondary" id="settingsClose">Close</button>
       </div>
       <div id="settingsMenu">
-        <nav class="settings-cats" aria-label="Kinds of settings">
-          <button class="settings-cat" data-cat="a11y"><span class="settings-cat-icon" aria-hidden="true">♿</span><span><strong>Accessibility</strong><small id="sumA11y"></small></span><span class="settings-cat-go" aria-hidden="true">›</span></button>
-          <button class="settings-cat" data-cat="meals"><span class="settings-cat-icon" aria-hidden="true">🥗</span><span><strong>Meals &amp; planning</strong><small id="sumMeals"></small></span><span class="settings-cat-go" aria-hidden="true">›</span></button>
-          <button class="settings-cat" data-cat="cooking"><span class="settings-cat-icon" aria-hidden="true">⏱️</span><span><strong>While cooking</strong><small id="sumCooking"></small></span><span class="settings-cat-go" aria-hidden="true">›</span></button>
-          <button class="settings-cat" data-cat="help"><span class="settings-cat-icon" aria-hidden="true">❓</span><span><strong>Help</strong><small>Welcome tour, credits</small></span><span class="settings-cat-go" aria-hidden="true">›</span></button>
+        <nav class="screen-menu" aria-label="Kinds of settings">
+          <button class="screen-row" data-cat="a11y"><span class="screen-row-icon" aria-hidden="true">♿</span><span><strong>Accessibility</strong><small id="sumA11y"></small></span><span class="screen-row-go" aria-hidden="true">›</span></button>
+          <button class="screen-row" data-cat="meals"><span class="screen-row-icon" aria-hidden="true">🥗</span><span><strong>Meals &amp; planning</strong><small id="sumMeals"></small></span><span class="screen-row-go" aria-hidden="true">›</span></button>
+          <button class="screen-row" data-cat="cooking"><span class="screen-row-icon" aria-hidden="true">⏱️</span><span><strong>While cooking</strong><small id="sumCooking"></small></span><span class="screen-row-go" aria-hidden="true">›</span></button>
+          <button class="screen-row" data-cat="help"><span class="screen-row-icon" aria-hidden="true">❓</span><span><strong>Help</strong><small>Welcome tour, credits</small></span><span class="screen-row-go" aria-hidden="true">›</span></button>
         </nav>
         <section class="settings-install" aria-labelledby="installHead">
           <h4 id="installHead">Install on your phone</h4>
           <div id="installHelp"></div>
         </section>
       </div>
-      <section class="settings-section" data-cat="a11y" data-title="Accessibility" hidden>
+      <section class="settings-section screen-page" data-cat="a11y" data-title="Accessibility" hidden>
         <h4>Text &amp; colors</h4>
         <label class="settings-row">Text size <select id="textSizeSel"></select></label>
         <label class="settings-row">Light or dark <select id="themeSel"></select></label>
@@ -365,7 +368,7 @@ body:has(#settingsPanel:not([hidden])) .wrap{max-width:980px}
         <div class="settings-row"><label for="speechRateSel">Speed</label> <select id="speechRateSel"></select> <button class="btn secondary" id="testVoiceBtn">🔊 Test voice</button></div>
         <p class="settings-note" id="speechNote">Every step and ingredient list also has its own 🔊 Read button.</p>
       </section>
-      <section class="settings-section" data-cat="meals" data-title="Meals &amp; planning" hidden>
+      <section class="settings-section screen-page" data-cat="meals" data-title="Meals &amp; planning" hidden>
         <h4>My diet</h4>
         <div class="settings-row my-diet-row" role="group" aria-label="My diet">
           <label><input type="checkbox" data-mydiet="vegetarian"> Vegetarian</label>
@@ -380,7 +383,7 @@ body:has(#settingsPanel:not([hidden])) .wrap{max-width:980px}
           <label><input type="radio" name="changeScope" value="date"> Just that date</label>
           <label><input type="radio" name="changeScope" value="week"> That day every week</label></div>
       </section>
-      <section class="settings-section" data-cat="cooking" data-title="While cooking" hidden>
+      <section class="settings-section screen-page" data-cat="cooking" data-title="While cooking" hidden>
         <label class="settings-row"><input type="checkbox" id="gatherFirstChk"> Start with a "get everything out" checklist</label>
         <label class="settings-row"><input type="checkbox" id="skipTimersChk"> Skip step timers</label>
         <p class="settings-note">Check off steps at your own pace instead.</p>
@@ -388,7 +391,7 @@ body:has(#settingsPanel:not([hidden])) .wrap{max-width:980px}
         <label class="settings-row"><input type="checkbox" id="keepAwakeChk"> Keep the screen on</label>
         <p class="settings-note" id="keepAwakeNote" hidden></p>
       </section>
-      <section class="settings-section" data-cat="help" data-title="Help" hidden>
+      <section class="settings-section screen-page" data-cat="help" data-title="Help" hidden>
         <button class="btn secondary" id="replayTourBtn">Show the welcome tour again</button>
         <p class="settings-note">App icon: <a href="https://iconscout.com/free-icon/free-cooking-icon_2037516" target="_blank" rel="noopener">Cooking icon on IconScout</a>.</p>
       </section>
@@ -964,14 +967,22 @@ function swapsChanged(){
   if(view==="week")renderRecipe();else if(view==="shop")renderShop();else renderList();
 }
 function turnSwapOn(s,optionIdx){settings.swaps[s.id]=optionIdx??settings.swaps[s.id]??0}
+// Each change says right away what it does and where, with Undo.
+function changeSwaps(change,message){
+  const before={...settings.swaps};
+  change();
+  swapsChanged();
+  showToast(message(),()=>{settings.swaps=before;swapsChanged()});
+}
 function setSwap(id,on,optionIdx){
   const s=SWAPS.find(x=>x.id===id);
-  if(on)turnSwapOn(s,optionIdx);else delete settings.swaps[id];
-  swapsChanged();
+  changeSwaps(()=>{if(on)turnSwapOn(s,optionIdx);else delete settings.swaps[id]},
+    ()=>on?`${s.from} swap is on · ${usageText(s)}`:`${s.from} swap is off`);
 }
 function setCategory(catId,on){
-  SWAPS.filter(s=>s.cat===catId).forEach(s=>{if(on)turnSwapOn(s);else delete settings.swaps[s.id]});
-  swapsChanged();
+  const label=SWAP_CATEGORIES.find(c=>c[0]===catId)[1].toLowerCase();
+  changeSwaps(()=>SWAPS.filter(s=>s.cat===catId).forEach(s=>{if(on)turnSwapOn(s);else delete settings.swaps[s.id]}),
+    ()=>`All ${label} swaps are ${on?"on":"off"}`);
 }
 function bindSwapControls(root){
   root.querySelectorAll("input[data-swap]").forEach(c=>c.onchange=()=>setSwap(c.dataset.swap,c.checked));
@@ -1090,15 +1101,6 @@ document.querySelectorAll('input[name="changeScope"]').forEach(radio=>{
   radio.checked=(radio.value==="week")===settings.changeEveryWeek;
   radio.onchange=()=>{settings.changeEveryWeek=radio.value==="week";saveSettings()};
 });
-function bindPanelToggle(btnId,panelId){
-  $(btnId).onclick=()=>{
-    const panel=$(panelId),open=panel.hidden;
-    panel.hidden=!open;
-    if(!open)stopSpeaking();// closing a panel stops its Test voice or anything else being read
-    $(btnId).setAttribute("aria-expanded",String(open));
-  };
-}
-bindPanelToggle("swapsBtn","swapsPanel");
 // One line under each kind of setting says what's set now, so most visits need no tap at all.
 function settingsSummaries(){
   const onOff=(on,text)=>on?text:"";
@@ -1110,85 +1112,151 @@ function settingsSummaries(){
     sumCooking:join([settings.skipTimers?"No step timers":"Step timers on",onOff(settings.gatherFirst,"Gather step"),onOff(settings.keepAwake,"Screen stays on")])
   };
 }
+/* ---------- menu screens: Settings and Swaps ---------- */
 // Phones show the menu or one page at a time; computers show the menu beside the chosen page.
-const twoColumnSettings=matchMedia("(min-width:761px)");
-let settingsPage="",scrollBeforeSettings=0;
-function refreshSettingsSummaries(){
-  for(const [id,text] of Object.entries(settingsSummaries()))$(id).textContent=text;
+const twoColumnScreens=matchMedia("(min-width:761px)");
+function markCurrentRow(panel,page){
+  panel.querySelectorAll(".screen-row").forEach(b=>b.dataset.cat===page?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"));
 }
+// On phones a page replaces the menu and gets a ← back; on computers both show side by side.
+function showMenuOrPage(menuId,backId,onePage){
+  $(menuId).hidden=onePage&&!twoColumnScreens.matches;
+  $(backId).hidden=!onePage||twoColumnScreens.matches;
+}
+const SCREENS={
+  settings:{btn:"settingsBtn",panel:"settingsPanel",title:"settingsTitle",show:()=>{settingsPage=null;showSettingsPage("")},refresh:()=>showSettingsPage(settingsPage)},
+  swaps:{btn:"swapsBtn",panel:"swapsPanel",title:"swapsTitle",show:()=>{swapsPage="";$("swapSearch").value="";renderSwapsBody()},refresh:()=>renderSwapsBody()}
+};
+let scrollBeforeScreen=0;
+function openScreen(name){
+  if(Object.values(SCREENS).every(s=>$(s.panel).hidden))scrollBeforeScreen=window.scrollY;
+  stopSpeaking();
+  for(const [n,s] of Object.entries(SCREENS)){$(s.panel).hidden=n!==name;$(s.btn).setAttribute("aria-expanded",String(n===name))}
+  SCREENS[name].show();
+  window.scrollTo(0,0);
+  $(SCREENS[name].title).focus({preventScroll:true});
+}
+function closeScreens(){
+  stopSpeaking();// closing stops Test voice or anything else being read
+  for(const s of Object.values(SCREENS)){$(s.panel).hidden=true;$(s.btn).setAttribute("aria-expanded","false")}
+  window.scrollTo(0,scrollBeforeScreen);// back where you were on the page
+}
+for(const [name,s] of Object.entries(SCREENS))$(s.btn).onclick=()=>$(s.panel).hidden?openScreen(name):closeScreens();
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&Object.values(SCREENS).some(s=>!$(s.panel).hidden))closeScreens()});
+// Turning a tablet or resizing the window switches between the one- and two-column layouts.
+twoColumnScreens.addEventListener("change",()=>{for(const s of Object.values(SCREENS))if(!$(s.panel).hidden)s.refresh()});
+
+let settingsPage="";
 // page is "" for the menu, or a section's data-cat. Computers always have a page chosen.
 function showSettingsPage(page){
-  if(!page&&twoColumnSettings.matches)page="a11y";
+  if(!page&&twoColumnScreens.matches)page="a11y";
   if(page!==settingsPage)stopSpeaking();// leaving a page stops its Test voice
   settingsPage=page;
   const panel=$("settingsPanel");
   panel.querySelectorAll(".settings-section").forEach(s=>s.hidden=s.dataset.cat!==page);
-  panel.querySelectorAll(".settings-cat").forEach(b=>b.dataset.cat===page?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"));
-  const onePage=!!page&&!twoColumnSettings.matches;
-  $("settingsMenu").hidden=onePage;
-  $("settingsBack").hidden=!onePage;
-  $("settingsTitle").textContent=onePage?panel.querySelector(`.settings-section[data-cat="${page}"]`).dataset.title:"Settings";
-  refreshSettingsSummaries();
+  markCurrentRow(panel,page);
+  showMenuOrPage("settingsMenu","settingsBack",!!page);
+  $("settingsTitle").textContent=page&&!twoColumnScreens.matches?panel.querySelector(`.settings-section[data-cat="${page}"]`).dataset.title:"Settings";
+  for(const [id,text] of Object.entries(settingsSummaries()))$(id).textContent=text;
   window.scrollTo(0,0);
 }
-function openSettings(){
-  scrollBeforeSettings=window.scrollY;
-  $("swapsPanel").hidden=true;$("swapsBtn").setAttribute("aria-expanded","false");
-  $("settingsPanel").hidden=false;$("settingsBtn").setAttribute("aria-expanded","true");
-  settingsPage=null;
-  showSettingsPage("");
-  $("settingsTitle").focus({preventScroll:true});
-}
-function closeSettings(){
-  stopSpeaking();
-  $("settingsPanel").hidden=true;$("settingsBtn").setAttribute("aria-expanded","false");
-  window.scrollTo(0,scrollBeforeSettings);// back where you were on the page
-}
-$("settingsBtn").onclick=()=>$("settingsPanel").hidden?openSettings():closeSettings();
-$("settingsClose").onclick=closeSettings;
+$("settingsClose").onclick=closeScreens;
 $("settingsBack").onclick=()=>{showSettingsPage("");$("settingsTitle").focus({preventScroll:true})};
-document.querySelectorAll(".settings-cat").forEach(b=>b.onclick=()=>{
+document.querySelectorAll("#settingsPanel .screen-row").forEach(b=>b.onclick=()=>{
   showSettingsPage(b.dataset.cat);
-  if(!twoColumnSettings.matches)$("settingsBack").focus({preventScroll:true});
+  if(!twoColumnScreens.matches)$("settingsBack").focus({preventScroll:true});
 });
-$("settingsPanel").addEventListener("change",refreshSettingsSummaries);
-// Turning a tablet or resizing the window switches between the one- and two-column layouts.
-twoColumnSettings.addEventListener("change",()=>{if(!$("settingsPanel").hidden)showSettingsPage(settingsPage)});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("settingsPanel").hidden)closeSettings()});
-const openSwapCategories=new Set();
-function renderSwapsPanel(){
-  const el=$("swapsPanel");
+$("settingsPanel").addEventListener("change",()=>{for(const [id,text] of Object.entries(settingsSummaries()))$(id).textContent=text});
+
+// Swaps: a search across every swap, then one row per kind of ingredient.
+const SWAP_ICONS={meat:"🥩",veg:"🥦",fruit:"🍎",herbs:"🌿",dairy:"🧀",pantry:"🥫"};
+let swapsPage="";
+function buildSwapsScreen(){
+  $("swapsPanel").innerHTML=`
+    <div class="screen-top">
+      <button class="link screen-back" id="swapsBack" hidden aria-label="Back to all swaps">←</button>
+      <h3 id="swapsTitle" tabindex="-1">Ingredient swaps</h3>
+      <button class="btn secondary" id="swapsClose">Close</button>
+    </div>
+    <input type="search" class="swap-search" id="swapSearch" placeholder="Find an ingredient, e.g. chicken" aria-label="Find an ingredient to swap" autocomplete="off">
+    <div id="swapsMenu">
+      <p class="settings-note" id="swapsCount" style="margin-top:0"></p>
+      <nav class="screen-menu" aria-label="Kinds of ingredients">${SWAP_CATEGORIES.map(([catId,label])=>
+        `<button class="screen-row" data-cat="${catId}"><span class="screen-row-icon" aria-hidden="true">${SWAP_ICONS[catId]}</span><span><strong>${label}</strong><small data-swap-sum="${catId}"></small></span><span class="screen-row-go" aria-hidden="true">›</span></button>`).join("")}</nav>
+    </div>
+    <section class="screen-page" id="swapsPage" aria-live="polite"></section>`;
+  $("swapsClose").onclick=closeScreens;
+  $("swapsBack").onclick=()=>{swapsPage="";$("swapSearch").value="";renderSwapsBody();$("swapsTitle").focus({preventScroll:true})};
+  $("swapSearch").oninput=()=>renderSwapsBody();
+  document.querySelectorAll("#swapsPanel .screen-row").forEach(b=>b.onclick=()=>{
+    swapsPage=b.dataset.cat;$("swapSearch").value="";renderSwapsBody();window.scrollTo(0,0);
+    if(!twoColumnScreens.matches)$("swapsBack").focus({preventScroll:true});
+  });
+}
+// Every word typed must match the swap's ingredient (or what it looks for in recipes), a replacement,
+// or its kind, like recipe search.
+function matchingSwaps(query){
+  const words=query.toLowerCase().split(/[\s,]+/).filter(Boolean);
+  const label=Object.fromEntries(SWAP_CATEGORIES);
+  return SWAPS.filter(s=>{
+    const text=[s.from,s.match.source,label[s.cat],...s.options.map(o=>o.to)].join(" ").toLowerCase();
+    return words.every(w=>text.includes(w));
+  });
+}
+// How many recipes use a swap, and which of the next 7 days' meals do.
+function swapUsage(s){
+  const recipes=RECIPES.filter(r=>swapsFor(r).includes(s)).length;
+  const days=[];
+  for(let offset=0;offset<7;offset++){
+    const r=byId[recipeIdOn(offset)];
+    if(r&&swapsFor(r).includes(s))days.push(DAYS[weekdayOf(dateAt(offset))]);
+  }
+  return {recipes,days};
+}
+function usageText(s){
+  const {recipes,days}=swapUsage(s);
+  return `in ${recipes} ${recipes===1?"recipe":"recipes"}${days.length?` · planned: ${days.join(", ")}`:""}`;
+}
+function swapsPageHtml(query){
+  if(query){
+    const found=matchingSwaps(query);
+    if(!found.length)return `<p class="recipe-sub">No swaps for “${escapeHtml(query)}”. Swaps cover ${SWAP_CATEGORIES.map(c=>c[1].toLowerCase()).join(", ")}.</p>`;
+    const label=Object.fromEntries(SWAP_CATEGORIES);
+    return `<h4>${found.length} ${found.length===1?"swap":"swaps"} for “${escapeHtml(query)}”</h4>${found.map(s=>swapRowHtml(s,`${label[s.cat]} · ${usageText(s)}`)).join("")}`;
+  }
+  const [catId,label]=SWAP_CATEGORIES.find(c=>c[0]===swapsPage);
+  const list=SWAPS.filter(s=>s.cat===catId),on=list.filter(isSwapOn).length;
+  return `<label class="swap-use-all"><input type="checkbox" data-cat="${catId}" ${on===list.length?"checked":""}> Use all ${list.length} ${label.toLowerCase()} swaps</label>
+    ${list.map(s=>swapRowHtml(s,usageText(s))).join("")}`;
+}
+function renderSwapsBody(){
+  const query=$("swapSearch").value.trim();
+  if(!query&&!swapsPage&&twoColumnScreens.matches)swapsPage=SWAP_CATEGORIES[0][0];
+  const showPage=!!(query||swapsPage);
   const n=Object.keys(settings.swaps).length;
-  el.innerHTML=`
-    <h3 style="margin:0 0 4px;font-size:14px">Ingredient swaps</h3>
-    <p class="recipe-sub" style="margin-bottom:12px">Turn on a whole category, or open it to pick swaps one by one and choose what to use instead. Swaps show up under the ingredient in every recipe that uses it, and lower the cost estimate. ${n?`<strong>${n} on.</strong>`:"None on yet."}</p>
-    ${SWAP_CATEGORIES.map(([catId,label])=>{
-      const list=SWAPS.filter(s=>s.cat===catId),on=list.filter(isSwapOn).length;
-      return `<div class="swap-cat">
-        <div class="swap-cat-head">
-          <label><input type="checkbox" data-cat="${catId}" ${on===list.length?"checked":""}> <span><strong>${label}</strong>: use all</span></label>
-          <span class="swap-meta">${on} of ${list.length} on</span>
-        </div>
-        <details data-cat-box="${catId}" ${openSwapCategories.has(catId)?"open":""}>
-          <summary>Choose ${label.toLowerCase()} swaps</summary>
-          ${list.map(s=>{
-            const used=RECIPES.filter(r=>swapsFor(r).includes(s)).length;
-            return swapRowHtml(s,`in ${used} ${used===1?"recipe":"recipes"}`);
-          }).join("")}
-        </details>
-      </div>`;
-    }).join("")}`;
-  el.querySelectorAll("input[data-cat]").forEach(c=>{
+  $("swapsCount").textContent=`Swaps show under the ingredient in every recipe that uses it, and lower the cost. ${n?`${n} on.`:"None on yet."}`;
+  for(const [catId] of SWAP_CATEGORIES){
+    const list=SWAPS.filter(s=>s.cat===catId),on=list.filter(isSwapOn).length;
+    document.querySelector(`[data-swap-sum="${catId}"]`).textContent=on?`${on} of ${list.length} on`:`${list.length} swaps, none on`;
+  }
+  markCurrentRow($("swapsPanel"),query?"":swapsPage);
+  showMenuOrPage("swapsMenu","swapsBack",showPage);
+  $("swapsTitle").textContent=showPage&&!twoColumnScreens.matches&&!query?SWAP_CATEGORIES.find(c=>c[0]===swapsPage)[1]:"Ingredient swaps";
+  const page=$("swapsPage");
+  page.hidden=!showPage;
+  // Re-drawing the page would drop keyboard focus, so put it back on the same control.
+  const focused=document.activeElement&&page.contains(document.activeElement)?document.activeElement:null;
+  const refocus=focused&&`${focused.tagName.toLowerCase()}[data-${focused.dataset.cat?"cat":"swap"}="${focused.dataset.cat||focused.dataset.swap}"]`;
+  page.innerHTML=showPage?swapsPageHtml(query):"";
+  page.querySelectorAll("input[data-cat]").forEach(c=>{
     const list=SWAPS.filter(s=>s.cat===c.dataset.cat),on=list.filter(isSwapOn).length;
     c.indeterminate=on>0&&on<list.length;
     c.onchange=()=>setCategory(c.dataset.cat,c.checked);
   });
-  el.querySelectorAll("details[data-cat-box]").forEach(d=>d.querySelector("summary").onclick=()=>{
-    const catId=d.dataset.catBox;
-    if(d.open)openSwapCategories.delete(catId);else openSwapCategories.add(catId);
-  });
-  bindSwapControls(el);
+  bindSwapControls(page);
+  if(refocus)page.querySelector(refocus)?.focus();
 }
+function renderSwapsPanel(){if(!$("swapSearch"))buildSwapsScreen();renderSwapsBody()}
 $("skipTimersChk").onchange=e=>{
   settings.skipTimers=e.target.checked;saveSettings();
   clearInterval(timerId);running=false;phase="task";
