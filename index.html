@@ -706,8 +706,11 @@ const recipeIdOn=offset=>recipeOn(dateAt(offset),basePlan(),overrides,dateChange
 // The next 7 days' recipes by weekday, Monday first, for the shopping list and reminders.
 function planArr(){return DAYS.map((_,w)=>recipeIdOn((w-TODAY+7)%7))}
 // Puts a recipe on a day, just that date or every week, as Settings says.
+// While a program is in use, "every week" changes the program itself.
 function planRecipe(offset,id){
-  planOn(dateAt(offset),id,settings.changeEveryWeek,basePlan(),overrides,dateChanges);
+  const program=activeProgram();
+  if(program&&settings.changeEveryWeek){setProgramDay(program,dateAt(offset),id,overrides,dateChanges);savePrograms()}
+  else planOn(dateAt(offset),id,settings.changeEveryWeek,basePlan(),overrides,dateChanges);
   saveOverrides();saveDateChanges();
 }
 // "Today", "Tomorrow", or the weekday; the date names below add the month and day.
@@ -1724,7 +1727,7 @@ function planChange(offset){
 function changeNoteHtml({kind,w}){
   const day=DAY_NAMES[w];
   if(kind==="date")return `<p class="swapnote">Changed for ${dateText(dayOffset)} only.
-    <button class="link" id="everyWeekBtn">Make it every ${day}</button> ·
+    <button class="link" id="everyWeekBtn">${activeProgram()?`Put it in “${escapeHtml(activeProgram().name)}” every ${day}`:`Make it every ${day}`}</button> ·
     <button class="link" id="restoreBtn">${activeProgram()&&overrides[w]===undefined?"Back to your program: ":"Go back to "}${byId[overrides[w]??basePlan()[w]].title}</button></p>`;
   if(kind==="week")return `<p class="swapnote">Changed for every ${day}.
     <button class="link" id="justThisBtn">Just this ${day}, ${monthDayText(dateAt(dayOffset))}</button> ·
@@ -1735,7 +1738,12 @@ function changeNoteHtml({kind,w}){
 // cooking carries on; going back to the usual recipe starts that recipe fresh.
 function bindChangeNote({kind,date,key,w}){
   const saved=()=>{saveOverrides();saveDateChanges();renderDays();renderRecipe()};
-  if(kind==="date")$("everyWeekBtn").onclick=()=>{planOn(date,dateChanges[key],true,basePlan(),overrides,dateChanges);saved()};
+  if(kind==="date")$("everyWeekBtn").onclick=()=>{
+    const program=activeProgram();
+    if(program){setProgramDay(program,date,dateChanges[key],overrides,dateChanges);savePrograms()}
+    else planOn(date,dateChanges[key],true,basePlan(),overrides,dateChanges);
+    saved();
+  };
   if(kind==="week")$("justThisBtn").onclick=()=>{keepJustThisDate(date,basePlan(),overrides,dateChanges);saved()};
   if(kind)$("restoreBtn").onclick=()=>{
     if(kind==="date")delete dateChanges[key];else delete overrides[w];
@@ -2269,7 +2277,7 @@ function renderDayPicker(){
   }
   const ahead=picker.weekFrom>thisWeek,more=picker.weekFrom+7<DAYS_AHEAD;
   $("pickerBox").innerHTML=`<h2 id="pickerTitle">Add ${r.title} to…</h2>
-    <p class="recipe-sub">Tap a day. ${settings.changeEveryWeek?"It replaces that day's meal every week.":"It replaces that day's meal for that date only."}</p>
+    <p class="recipe-sub">Tap a day. ${!settings.changeEveryWeek?"It replaces that day's meal for that date only.":activeProgram()?`It replaces that day's meal in “${escapeHtml(activeProgram().name)}”, every week.`:"It replaces that day's meal every week."}</p>
     <div class="days-list">${rows.join("")}</div>
     <div class="days-nav">${ahead?`<button class="link" id="pickerEarlier">← ${picker.weekFrom===thisWeek+7?"This week":"Previous week"}</button>`:"<span></span>"}
       ${more?`<button class="link" id="pickerLater">Next week →</button>`:""}</div>
@@ -2281,7 +2289,8 @@ function renderDayPicker(){
 }
 // Puts the recipe on the day and stays in All recipes, with a moment to undo it.
 function addToDay(offset){
-  const before={everyWeek:{...overrides},dates:{...dateChanges}},title=byId[picker.id].title;
+  const program=activeProgram(),title=byId[picker.id].title;
+  const before={everyWeek:{...overrides},dates:{...dateChanges},programDays:program?[...program.days]:null};
   const refresh=shownBefore=>{
     if(recipeIdOn(dayOffset)!==shownBefore)initDay(dayOffset);else renderDays();
     if(view==="cat")renderList();
@@ -2290,9 +2299,11 @@ function addToDay(offset){
   planRecipe(offset,picker.id);
   closeDayPicker();
   refresh(shownBefore);
-  showToast(`${title} added to ${dateText(offset)} ✓`,()=>{
+  const where=program&&settings.changeEveryWeek?`“${escapeHtml(program.name)}” every ${DAY_NAMES[weekdayOf(dateAt(offset))]}`:dateText(offset);
+  showToast(`${title} added to ${where} ✓`,()=>{
     const shownNow=recipeIdOn(dayOffset);
     overrides=before.everyWeek;dateChanges=before.dates;saveOverrides();saveDateChanges();
+    if(program){program.days=before.programDays;savePrograms()}
     refresh(shownNow);
   });
 }

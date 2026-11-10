@@ -47,3 +47,12 @@ function startProgram(days,everyWeek,dateChanges){
     if(days[(new Date(y,m-1,d).getDay()+6)%7]===id)delete dateChanges[key];
   }
 }
+
+// "Every Wednesday" while a program is in use changes the program itself, so the day isn't
+// left marked off program for good. Needs weekdayOf and dateKey from plan-dates.js.
+function setProgramDay(program,date,id,everyWeek,dateChanges){
+  const w=weekdayOf(date);
+  program.days[w]=id;
+  delete everyWeek[w];
+  delete dateChanges[dateKey(date)];
+}
