@@ -106,14 +106,39 @@ details.ingr li{margin:3px 0}
 .btn.secondary{background:var(--soft);color:var(--text)}
 .btn:disabled{opacity:.5;cursor:default}
 .fav-btn[aria-pressed="true"]{color:var(--accent);font-weight:600}
-.settings-note{font-size:13px;color:var(--muted);margin:-4px 0 0 24px}
-.settings-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;font-size:14px}
-.settings-row:last-child{margin-bottom:0}
-.settings-row input[type="checkbox"]{width:16px;height:16px;flex-shrink:0}
-.settings-row select{max-width:100%;min-width:0;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
-.settings-section+.settings-section{border-top:1px solid var(--line);margin-top:14px;padding-top:14px}
-.settings-section h4{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
-.settings-section h5{margin:14px 0 8px;font-size:14px}
+/* Settings opens on a short menu of kinds of settings; each opens its own page (see showSettingsPage). */
+#settingsPanel{margin-bottom:16px}
+.settings-top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.settings-top h3{margin:0;font-size:18px;flex:1}
+.settings-top h3:focus{outline:none}
+.settings-back{font-size:22px;text-decoration:none;font-weight:600;min-width:40px;min-height:40px}
+.settings-cats{display:flex;flex-direction:column;gap:8px}
+.settings-cat{display:flex;align-items:center;gap:14px;width:100%;min-height:64px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--text);cursor:pointer;text-align:left;font-size:16px}
+.settings-cat:hover{background:var(--soft)}
+.settings-cat-icon{font-size:24px;width:30px;text-align:center}
+.settings-cat>span:nth-child(2){flex:1;min-width:0}
+.settings-cat small{display:block;margin-top:2px;font-size:13px;color:var(--muted)}
+.settings-cat-go{font-size:22px;color:var(--muted)}
+.settings-install{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.settings-note{font-size:13px;color:var(--muted);margin:-4px 0 12px}
+.settings-row{display:flex;gap:10px;align-items:center;min-height:36px;margin-bottom:8px;font-size:15px}
+.settings-row input[type="checkbox"],.settings-row input[type="radio"]{width:18px;height:18px;flex-shrink:0}
+.settings-row select{max-width:100%;min-width:0;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);font-size:14px}
+.settings-section h4,.settings-install h4{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.settings-section h4:not(:first-child){margin-top:20px}
+/* Settings is its own screen: while it's open the rest of the page is hidden, so nothing behind it scrolls. */
+body:has(#settingsPanel:not([hidden])) :is(#weekView,#catView,#shopView,#mineView,#swapsPanel,#side){display:none}
+body:has(#settingsPanel:not([hidden])) .wrap{max-width:980px}
+#settingsBtn[aria-expanded="true"]{background:var(--accent);color:var(--accent-ink)}
+/* Computers: kinds of settings on the left, the chosen one on the right. */
+@media (min-width:761px){
+  #settingsPanel{max-width:none;display:grid;grid-template-columns:280px minmax(0,1fr);gap:0 28px;align-items:start;padding:20px 24px}
+  .settings-top{grid-column:1/-1}
+  .settings-back,.settings-cat-go{display:none}
+  .settings-cat{min-height:56px}
+  .settings-cat[aria-current="page"]{border-color:var(--accent);background:var(--soft);box-shadow:inset 4px 0 0 var(--accent)}
+  .settings-section{border-left:1px solid var(--line);padding-left:28px;min-height:100%}
+}
 .side h3{font-size:14px;margin:0 0 10px}
 .check-item{display:flex;align-items:flex-start;gap:8px;padding:6px 0;font-size:13px;border-bottom:1px solid var(--line)}
 .check-item .nm{flex:1}
@@ -308,46 +333,64 @@ details.ingr li{margin:3px 0}
       </div>
     </div>
     <div class="card" id="swapsPanel" hidden style="margin-bottom:16px"></div>
-    <div class="card" id="settingsPanel" hidden style="margin-bottom:16px">
-      <h3 style="margin:0 0 12px;font-size:14px">Settings</h3>
-      <section class="settings-section" aria-labelledby="cookingHead">
-        <h4 id="cookingHead">Cooking</h4>
-        <div class="settings-row my-diet-row" role="group" aria-label="My diet"><span>My diet:</span>
+    <div class="card" id="settingsPanel" hidden role="dialog" aria-labelledby="settingsTitle">
+      <div class="settings-top">
+        <button class="link settings-back" id="settingsBack" hidden aria-label="Back to all settings">←</button>
+        <h3 id="settingsTitle" tabindex="-1">Settings</h3>
+        <button class="btn secondary" id="settingsClose">Close</button>
+      </div>
+      <div id="settingsMenu">
+        <nav class="settings-cats" aria-label="Kinds of settings">
+          <button class="settings-cat" data-cat="a11y"><span class="settings-cat-icon" aria-hidden="true">♿</span><span><strong>Accessibility</strong><small id="sumA11y"></small></span><span class="settings-cat-go" aria-hidden="true">›</span></button>
+          <button class="settings-cat" data-cat="meals"><span class="settings-cat-icon" aria-hidden="true">🥗</span><span><strong>Meals &amp; planning</strong><small id="sumMeals"></small></span><span class="settings-cat-go" aria-hidden="true">›</span></button>
+          <button class="settings-cat" data-cat="cooking"><span class="settings-cat-icon" aria-hidden="true">⏱️</span><span><strong>While cooking</strong><small id="sumCooking"></small></span><span class="settings-cat-go" aria-hidden="true">›</span></button>
+          <button class="settings-cat" data-cat="help"><span class="settings-cat-icon" aria-hidden="true">❓</span><span><strong>Help</strong><small>Welcome tour, credits</small></span><span class="settings-cat-go" aria-hidden="true">›</span></button>
+        </nav>
+        <section class="settings-install" aria-labelledby="installHead">
+          <h4 id="installHead">Install on your phone</h4>
+          <div id="installHelp"></div>
+        </section>
+      </div>
+      <section class="settings-section" data-cat="a11y" data-title="Accessibility" hidden>
+        <h4>Text &amp; colors</h4>
+        <label class="settings-row">Text size <select id="textSizeSel"></select></label>
+        <label class="settings-row">Light or dark <select id="themeSel"></select></label>
+        <label class="settings-row">Colors <select id="colorModeSel"></select></label>
+        <label class="settings-row"><input type="checkbox" id="highContrastChk"> High contrast</label>
+        <label class="settings-row"><input type="checkbox" id="readableFontChk"> Easier-to-read spacing</label>
+        <label class="settings-row"><input type="checkbox" id="reduceMotionChk"> Reduce motion</label>
+        <h4>Read aloud</h4>
+        <label class="settings-row"><input type="checkbox" id="autoReadChk"> Read each new step aloud</label>
+        <label class="settings-row">Voice <select id="voiceSel"></select></label>
+        <div class="settings-row"><label for="speechRateSel">Speed</label> <select id="speechRateSel"></select> <button class="btn secondary" id="testVoiceBtn">🔊 Test voice</button></div>
+        <p class="settings-note" id="speechNote">Every step and ingredient list also has its own 🔊 Read button.</p>
+      </section>
+      <section class="settings-section" data-cat="meals" data-title="Meals &amp; planning" hidden>
+        <h4>My diet</h4>
+        <div class="settings-row my-diet-row" role="group" aria-label="My diet">
           <label><input type="checkbox" data-mydiet="vegetarian"> Vegetarian</label>
           <label><input type="checkbox" data-mydiet="vegan"> Vegan</label>
           <label><input type="checkbox" data-mydiet="halal"> Halal-friendly</label>
           <label><input type="checkbox" data-mydiet="glutenfree"> Gluten-free</label></div>
-        <p class="settings-note">All recipes and Surprise me show only recipes that fit. Leave all unticked to see everything.</p>
-        <label class="settings-row"><input type="checkbox" id="skipTimersChk"> Skip step timers — just check off steps at your own pace</label>
-        <label class="settings-row"><input type="checkbox" id="cheapModeChk"> Plan this week with the cheapest recipes (any day you've swapped yourself stays as you set it)</label>
-        <div class="settings-row my-diet-row" role="radiogroup" aria-label="When I change a day's recipe"><span>When I change a day's recipe, change:</span>
+        <p class="settings-note">Only recipes that fit show in All recipes and Surprise me. None ticked shows everything.</p>
+        <h4>Planning</h4>
+        <label class="settings-row"><input type="checkbox" id="cheapModeChk"> Fill this week with the cheapest recipes</label>
+        <p class="settings-note">Days you changed yourself stay as you set them.</p>
+        <div class="settings-row my-diet-row" role="radiogroup" aria-label="When I change a day's recipe"><span>Changing a day's recipe changes:</span>
           <label><input type="radio" name="changeScope" value="date"> Just that date</label>
           <label><input type="radio" name="changeScope" value="week"> That day every week</label></div>
-        <label class="settings-row"><input type="checkbox" id="checkInChk"> Check in with a soft chime if a step without a timer takes much longer than usual</label>
-        <label class="settings-row"><input type="checkbox" id="gatherFirstChk"> Start each recipe with a "get everything out" checklist of ingredients and tools</label>
-        <label class="settings-row"><input type="checkbox" id="keepAwakeChk"> Keep the screen on while the app is open, so it doesn't lock mid-recipe</label>
+      </section>
+      <section class="settings-section" data-cat="cooking" data-title="While cooking" hidden>
+        <label class="settings-row"><input type="checkbox" id="gatherFirstChk"> Start with a "get everything out" checklist</label>
+        <label class="settings-row"><input type="checkbox" id="skipTimersChk"> Skip step timers</label>
+        <p class="settings-note">Check off steps at your own pace instead.</p>
+        <label class="settings-row"><input type="checkbox" id="checkInChk"> Soft chime if an untimed step runs long</label>
+        <label class="settings-row"><input type="checkbox" id="keepAwakeChk"> Keep the screen on</label>
         <p class="settings-note" id="keepAwakeNote" hidden></p>
       </section>
-      <section class="settings-section" aria-labelledby="a11yHead">
-        <h4 id="a11yHead">Accessibility</h4>
-        <label class="settings-row">Text size <select id="textSizeSel"></select></label>
-        <label class="settings-row">Light or dark <select id="themeSel"></select></label>
-        <label class="settings-row">Colors <select id="colorModeSel"></select></label>
-        <label class="settings-row"><input type="checkbox" id="highContrastChk"> High contrast — darker text and stronger outlines</label>
-        <label class="settings-row"><input type="checkbox" id="readableFontChk"> Easier-to-read text — more space between letters, words, and lines</label>
-        <label class="settings-row"><input type="checkbox" id="reduceMotionChk"> Reduce motion — turn off animations</label>
-        <h5>Read aloud</h5>
-        <label class="settings-row"><input type="checkbox" id="autoReadChk"> Read each new step out loud when you get to it</label>
-        <label class="settings-row">Voice <select id="voiceSel"></select></label>
-        <div class="settings-row"><label for="speechRateSel">Reading speed</label> <select id="speechRateSel"></select> <button class="btn secondary" id="testVoiceBtn">🔊 Test voice</button></div>
-        <p class="settings-note" id="speechNote" style="margin-left:0">Every step also has a 🔊 Read step button, and the ingredient list has one too.</p>
-      </section>
-      <section class="settings-section" aria-labelledby="helpHead">
-        <h4 id="helpHead">Help</h4>
+      <section class="settings-section" data-cat="help" data-title="Help" hidden>
         <button class="btn secondary" id="replayTourBtn">Show the welcome tour again</button>
-        <h5>Install on your phone</h5>
-        <div id="installHelp"></div>
-        <p class="settings-note" style="margin-left:0">App icon: <a href="https://iconscout.com/free-icon/free-cooking-icon_2037516" target="_blank" rel="noopener">Cooking icon on IconScout</a>.</p>
+        <p class="settings-note">App icon: <a href="https://iconscout.com/free-icon/free-cooking-icon_2037516" target="_blank" rel="noopener">Cooking icon on IconScout</a>.</p>
       </section>
     </div>
     <div id="weekView">
@@ -1055,8 +1098,63 @@ function bindPanelToggle(btnId,panelId){
     $(btnId).setAttribute("aria-expanded",String(open));
   };
 }
-bindPanelToggle("settingsBtn","settingsPanel");
 bindPanelToggle("swapsBtn","swapsPanel");
+// One line under each kind of setting says what's set now, so most visits need no tap at all.
+function settingsSummaries(){
+  const onOff=(on,text)=>on?text:"";
+  const join=parts=>parts.filter(Boolean).join(" · ");
+  const dietNames={vegetarian:"Vegetarian",vegan:"Vegan",halal:"Halal-friendly",glutenfree:"Gluten-free"};
+  return {
+    sumA11y:join([`${TEXT_SIZES[settings.textSize]} text`,THEMES[settings.theme],settings.autoRead?"Reads steps aloud":"Read aloud off"]),
+    sumMeals:join([settings.myDiet.length?settings.myDiet.map(d=>dietNames[d]).join(", "):"Any diet",onOff(settings.cheapMode,"Cheapest week")]),
+    sumCooking:join([settings.skipTimers?"No step timers":"Step timers on",onOff(settings.gatherFirst,"Gather step"),onOff(settings.keepAwake,"Screen stays on")])
+  };
+}
+// Phones show the menu or one page at a time; computers show the menu beside the chosen page.
+const twoColumnSettings=matchMedia("(min-width:761px)");
+let settingsPage="",scrollBeforeSettings=0;
+function refreshSettingsSummaries(){
+  for(const [id,text] of Object.entries(settingsSummaries()))$(id).textContent=text;
+}
+// page is "" for the menu, or a section's data-cat. Computers always have a page chosen.
+function showSettingsPage(page){
+  if(!page&&twoColumnSettings.matches)page="a11y";
+  if(page!==settingsPage)stopSpeaking();// leaving a page stops its Test voice
+  settingsPage=page;
+  const panel=$("settingsPanel");
+  panel.querySelectorAll(".settings-section").forEach(s=>s.hidden=s.dataset.cat!==page);
+  panel.querySelectorAll(".settings-cat").forEach(b=>b.dataset.cat===page?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"));
+  const onePage=!!page&&!twoColumnSettings.matches;
+  $("settingsMenu").hidden=onePage;
+  $("settingsBack").hidden=!onePage;
+  $("settingsTitle").textContent=onePage?panel.querySelector(`.settings-section[data-cat="${page}"]`).dataset.title:"Settings";
+  refreshSettingsSummaries();
+  window.scrollTo(0,0);
+}
+function openSettings(){
+  scrollBeforeSettings=window.scrollY;
+  $("swapsPanel").hidden=true;$("swapsBtn").setAttribute("aria-expanded","false");
+  $("settingsPanel").hidden=false;$("settingsBtn").setAttribute("aria-expanded","true");
+  settingsPage=null;
+  showSettingsPage("");
+  $("settingsTitle").focus({preventScroll:true});
+}
+function closeSettings(){
+  stopSpeaking();
+  $("settingsPanel").hidden=true;$("settingsBtn").setAttribute("aria-expanded","false");
+  window.scrollTo(0,scrollBeforeSettings);// back where you were on the page
+}
+$("settingsBtn").onclick=()=>$("settingsPanel").hidden?openSettings():closeSettings();
+$("settingsClose").onclick=closeSettings;
+$("settingsBack").onclick=()=>{showSettingsPage("");$("settingsTitle").focus({preventScroll:true})};
+document.querySelectorAll(".settings-cat").forEach(b=>b.onclick=()=>{
+  showSettingsPage(b.dataset.cat);
+  if(!twoColumnSettings.matches)$("settingsBack").focus({preventScroll:true});
+});
+$("settingsPanel").addEventListener("change",refreshSettingsSummaries);
+// Turning a tablet or resizing the window switches between the one- and two-column layouts.
+twoColumnSettings.addEventListener("change",()=>{if(!$("settingsPanel").hidden)showSettingsPage(settingsPage)});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("settingsPanel").hidden)closeSettings()});
 const openSwapCategories=new Set();
 function renderSwapsPanel(){
   const el=$("swapsPanel");

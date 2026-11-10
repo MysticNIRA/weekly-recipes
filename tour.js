@@ -18,7 +18,7 @@ const TOUR_STEPS=[
  {title:"My recipes",target:"tabMine",
   text:"Write down your own recipes, as short as an ingredient list or with steps and timers. They work everywhere other recipes do."},
  {title:"Swaps and Settings",target:"settingsBtn",
-  text:"Swaps uses cheaper ingredients or what you have on hand. Settings has bigger text, dark mode, read-aloud, and more. You can replay this tour there anytime."}
+  text:"Swaps uses cheaper ingredients or what you have on hand. Settings has bigger text, dark mode, read-aloud, and more. You can replay this tour anytime under Settings → Help."}
 ];
 // Optional help for the Shopping list, started from "How do lists work?" on that screen.
 const LIST_TOUR_STEPS=[
